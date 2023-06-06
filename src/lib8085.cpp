@@ -309,57 +309,62 @@ namespace lib8085
                     }
                 }
                 break;
+            case CMA:
+                {
+                    reg_a ^= 1111_1111;
+
+                }
+                break;
+            case CMC:
+                {
+                    carry = !carry;
+                }
+                break;
+            case CMP_A:
+                {
+                    zero = true;
+                }
+                break;
+            case CMP_B:
+                {
+                    cmp(reg_a, reg_b);
+                }
+                break;
+            case CMP_C:
+                {
+                    cmp(reg_a, reg_c);
+                }
+                break;
+            case CMP_D:
+                {
+                    cmp(reg_a, reg_d);
+                }
+                break;
+            case CMP_E:
+                {
+                    cmp(reg_a, reg_e);
+                }
+                break;
+            case CMP_H:
+                {
+                    cmp(reg_a, reg_h);
+                }
+                break;
+            case CMP_L:
+                {
+                    cmp(reg_a, reg_l);
+                }
+                break;
+            case CMP_M:
+                {
+                    uint8_t operand = get_hl_mem();
+
+                    cmp(reg_a, operand);
+                }
+                break;
             case CNC:
                 {
                     if(!carry)
-                    {
-                        uint16_t address = get_imm_16();
-                        uint16_t next_ins = program_counter + 1;
-                        program_counter = address;
-
-                        push_stack_16(next_ins);
-                    }
-                    else
-                    {
-                        program_counter += 2;
-                    }
-                }
-                break;
-            case CP:
-                {
-                    if(!sign)
-                    {
-                        uint16_t address = get_imm_16();
-                        uint16_t next_ins = program_counter + 1;
-                        program_counter = address;
-
-                        push_stack_16(next_ins);
-                    }
-                    else
-                    {
-                        program_counter += 2;
-                    }
-                }
-                break;
-            case CM:
-                {
-                    if(!sign)
-                    {
-                        uint16_t address = get_imm_16();
-                        uint16_t next_ins = program_counter + 1;
-                        program_counter = address;
-
-                        push_stack_16(next_ins);
-                    }
-                    else
-                    {
-                        program_counter += 2;
-                    }
-                }
-                break;
-            case CZ:
-                {
-                    if(zero)
                     {
                         uint16_t address = get_imm_16();
                         uint16_t next_ins = program_counter + 1;
@@ -389,6 +394,55 @@ namespace lib8085
                     }
                 }
                 break;
+            case CP:
+                {
+                    if(!sign)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            // Call on minus
+            case CM:
+                {
+                    if(sign)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            case CZ:
+                {
+                    if(zero)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
             case CPE:
                 {
                     if(parity)
@@ -403,6 +457,178 @@ namespace lib8085
                     {
                         program_counter += 2;
                     }
+                }
+                break;
+            case CPI:
+                {
+                    uint8_t operand = get_imm();
+
+                    cmp(reg_a, operand);
+                }
+                break;
+            case CPO:
+                {
+                    if(!parity)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            case DAA:
+                {
+                    uint8_t msn = (reg_a & 1111_0000) >> 4;
+                    uint8_t lsn = reg_a >> 4;
+
+                    if(lsn > 9)
+                    {
+                        auxiliary_carry = true;
+                        lsn += 6;
+                    }
+
+                    if(msn > 9 || carry)
+                    {
+                        msn += 6;
+                    }
+
+                }
+                break;
+            case DAD_B:
+                {
+                    uint16_t res = reg_b;
+                    res <<= 4;
+                    res |= reg_c;
+
+                    uint16_t hl = reg_h;
+                    hl <<= 4;
+                    hl |= reg_l;
+
+                    res += hl;
+                    reg_h = res >> 4;
+                    reg_l = (res << 4) >> 4;
+                }
+                break;
+            case DAD_D:
+                {
+                    uint16_t res = reg_d;
+                    res <<= 4;
+                    res |= reg_e;
+
+                    uint16_t hl = reg_h;
+                    hl <= 4;
+                    hl |= reg_l;
+
+                    res += hl;
+                    reg_h = res >> 4;
+                    reg_l = (res << 4) >> 4;
+                }
+                break;
+            case DAD_H:
+                {
+                    uint16_t res = reg_h;
+                    res <= 4;
+                    res |= reg_l;
+
+                    res = res * 2;
+                    reg_h = res >> 4;
+                    reg_l = (res << 4) >> 4;
+                }
+                break;
+            case DAD_SP:
+                {
+                    uint16_t res = reg_h;
+                    res <= 4;
+                    res |= reg_l;
+
+                    res = stack_pointer + res;
+                    reg_h = res >> 4;
+                    reg_l = (res << 4) >> 4;
+                }
+                break;
+            case DCR_A:
+                {
+                    reg_a--;
+                }
+                break;
+            case DCR_B:
+                {
+                    reg_b--;
+                }
+                break;
+            case DCR_C:
+                {
+                    reg_c--;
+                }
+                break;
+            case DCR_D:
+                {
+                    reg_d--;
+                }
+                break;
+            case DCR_E:
+                {
+                    reg_e--;
+                }
+                break;
+            case DCR_H:
+                {
+                    reg_h--;
+                }
+                break;
+            case DCR_L:
+                {
+                    reg_l--;
+                }
+                break;
+            case DCR_M:
+                {
+                    uint8_t address = get_hl_mem();
+                    mem[address]--;
+                }
+                break;
+            case DCX_B:
+                {
+                    uint16_t rp = reg_b;
+                    rp <<= 4;
+                    rp |= reg_c;
+
+                    rp --;
+                    reg_b = rp >> 4;
+                    reg_c = (rp << 4) >> 4;
+                }
+                break;
+            case DCX_D:
+                {
+                    uint16_t rp = reg_d;
+                    rp <<= 4;
+                    rp |= reg_e;
+
+                    rp --;
+                    reg_d = rp >> 4;
+                    reg_e = (rp << 4) >> 4;
+                }
+                break;
+            case DCX_H:
+                {
+                    uint16_t rp = reg_h;
+                    rp <<= 4;
+                    rp |= reg_l;
+
+                    rp --;
+                    reg_h = rp >> 4;
+                    reg_l = (rp << 4) >> 4;
+                }
+                break;
+            case DCX_SP:
+                {
+                    stack_pointer --;
                 }
                 break;
             case MOV_A_A:
@@ -449,6 +675,22 @@ namespace lib8085
         else
         {
             reg_a += addend;
+        }
+    }
+
+    void Processor::cmp(uint8_t a, uint8_t b)
+    {
+        if(a == b)
+        {
+            zero = true;
+        }
+        else if(a < b)
+        {
+            carry = 1;
+        }
+        else if(a > b)
+        {
+            carry = 0; zero = 0;
         }
     }
 

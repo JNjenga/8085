@@ -42,6 +42,7 @@ namespace lib8085
 
         private:
         void add(int addend, bool with_carry);
+        void cmp(uint8_t a, uint8_t b);
     };
 
 }
