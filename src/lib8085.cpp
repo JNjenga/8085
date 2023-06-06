@@ -2,7 +2,9 @@
 #include <iostream>
 #include <iomanip>
 
-#define get_byte(h, l) ((h << 8) | l)
+#define get_word(h, l) ((h << 8) | l)
+#define get_hbyte(w) (w >> 8)
+#define get_lbyte(w) ((w << 8) >> 8)
 
 namespace lib8085
 {
@@ -42,58 +44,386 @@ namespace lib8085
         auxiliary_carry = false;
     }
 
+    uint8_t Processor::get_imm()
+    {
+        return mem[program_counter++];
+    }
+
+    uint8_t Processor::get_hl_mem()
+    {
+        uint16_t address = get_word(reg_h, reg_l);
+
+        return mem[address];
+    }
+
+    uint16_t Processor::get_imm_16()
+    {
+        return get_word(mem[program_counter++], mem[program_counter++]);
+    }
+
+    void Processor::push_stack(uint8_t val)
+    {
+        mem[--stack_pointer] = val;
+    }
+
+    void Processor::push_stack_16(uint16_t val)
+    {
+        mem[--stack_pointer] = get_lbyte(val);
+        mem[--stack_pointer] = get_hbyte(val);
+    }
+
+    uint8_t Processor::pop_stack()
+    {
+        return mem[stack_pointer++];
+    }
+
+    uint16_t Processor::pop_stack_16()
+    {
+        return get_word(mem[stack_pointer++], mem[stack_pointer++]);
+    }
+
     void Processor::exec(int no_of_instructions)
     {
         uint16_t op_code = mem[program_counter++];
 
         switch(op_code)
         {
-            case InstructionSet::ADD_A:
+            case ACI:
+                {
+                    uint8_t operand = get_imm();
+                    add(operand, true);
+                }
+                break;
+            case ADC_A:
+                {
+                    add(reg_a, true);
+                }
+                break;
+            case ADC_B:
+                {
+                    add(reg_b, true);
+                }
+                break;
+            case ADC_C:
+                {
+                    add(reg_c, true);
+                }
+                break;
+            case ADC_D:
+                {
+                    add(reg_d, true);
+                }
+                break;
+            case ADC_E:
+                {
+                    add(reg_e, true);
+                }
+                break;
+            case ADC_H:
+                {
+                    add(reg_h, true);
+                }
+                break;
+            case ADC_L:
+                {
+                    add(reg_l, true);
+                }
+                break;
+            case ADC_M:
+                {
+                    uint8_t operand = get_hl_mem();
+
+                    add(operand, true);
+                }
+                break;
+            case ADD_A:
                 {
                     add(reg_a, false);
                 }
                 break;
-            case InstructionSet::ADD_M:
+            case ADD_B:
                 {
-                    uint16_t address = get_byte(reg_h, reg_l);
-
-                    add(mem[address], false);
+                    add(reg_b, false);
                 }
                 break;
-            case InstructionSet::ADI:
+            case ADD_C:
                 {
-                    uint8_t addend = mem[program_counter++];
+                    add(reg_c, false);
+                }
+                break;
+            case ADD_D:
+                {
+                    add(reg_d, false);
+                }
+                break;
+            case ADD_E:
+                {
+                    add(reg_e, false);
+                }
+                break;
+            case ADD_H:
+                {
+                    add(reg_h, false);
+                }
+                break;
+            case ADD_L:
+                {
+                    add(reg_l, false);
+                }
+                break;
+            case ADD_M:
+                {
+                    uint8_t operand = get_hl_mem();
+
+                    add(operand, false);
+                }
+                break;
+            case ADI:
+                {
+                    uint8_t addend = get_imm();
 
                     add(addend, false);
                 }
                 break;
-            case InstructionSet::ANA_A:
+            case ANA_A:
                 {
                     reg_a &= reg_a;
 
                     sign = reg_a < 0 ? true : false;
                     zero = reg_a == 0 ? true : false;
+
+                    carry = false;
+                    auxiliary_carry = false;
                 }
                 break;
-            case InstructionSet::MOV_A_A:
+            case ANA_B:
+                {
+                    reg_a &= reg_b;
+
+                    sign = reg_a < 0 ? true : false;
+                    zero = reg_a == 0 ? true : false;
+
+                    carry = false;
+                    auxiliary_carry = false;
+                }
+                break;
+            case ANA_C:
+                {
+                    reg_a &= reg_c;
+
+                    sign = reg_a < 0 ? true : false;
+                    zero = reg_a == 0 ? true : false;
+
+                    carry = false;
+                    auxiliary_carry = false;
+                }
+                break;
+            case ANA_D:
+                {
+                    reg_a &= reg_d;
+
+                    sign = reg_a < 0 ? true : false;
+                    zero = reg_a == 0 ? true : false;
+
+                    carry = false;
+                    auxiliary_carry = false;
+                }
+                break;
+            case ANA_E:
+                {
+                    reg_a &= reg_e;
+
+                    sign = reg_a < 0 ? true : false;
+                    zero = reg_a == 0 ? true : false;
+
+                    carry = false;
+                    auxiliary_carry = false;
+                }
+                break;
+            case ANA_H:
+                {
+                    reg_a &= reg_h;
+
+                    sign = reg_a < 0 ? true : false;
+                    zero = reg_a == 0 ? true : false;
+
+                    carry = false;
+                    auxiliary_carry = false;
+                }
+                break;
+            case ANA_L:
+                {
+                    reg_a &= reg_l;
+
+                    sign = reg_a < 0 ? true : false;
+                    zero = reg_a == 0 ? true : false;
+
+                    carry = false;
+                    auxiliary_carry = false;
+                }
+                break;
+            case ANA_M:
+                {
+                    reg_a &= get_hl_mem();
+
+                    sign = reg_a < 0 ? true : false;
+                    zero = reg_a == 0 ? true : false;
+
+                    carry = false;
+                    auxiliary_carry = false;
+                }
+                break;
+            case ANI:
+                {
+                    reg_a &= get_imm();
+
+                    sign = reg_a < 0 ? true : false;
+                    zero = reg_a == 0 ? true : false;
+
+                    carry = false;
+                    auxiliary_carry = false;
+                }
+                break;
+            case CALL:
+                {
+                    uint16_t address = get_imm_16();
+                    uint16_t next_ins = program_counter + 1;
+                    program_counter = address;
+
+                    push_stack_16(next_ins);
+                }
+                break;
+            case CC:
+                {
+                    if(carry)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            case CNC:
+                {
+                    if(!carry)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            case CP:
+                {
+                    if(!sign)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            case CM:
+                {
+                    if(!sign)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            case CZ:
+                {
+                    if(zero)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            case CNZ:
+                {
+                    if(!zero)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            case CPE:
+                {
+                    if(parity)
+                    {
+                        uint16_t address = get_imm_16();
+                        uint16_t next_ins = program_counter + 1;
+                        program_counter = address;
+
+                        push_stack_16(next_ins);
+                    }
+                    else
+                    {
+                        program_counter += 2;
+                    }
+                }
+                break;
+            case MOV_A_A:
                 {
                     reg_a = reg_a;
                 }
                 break;
-            case InstructionSet::MOV_A_B:
+            case MOV_A_B:
                 {
                     reg_a = reg_b;
                 }
                 break;
-            case InstructionSet::MOV_A_M:
+            case MOV_A_M:
                 {
-                    uint16_t address = get_byte(reg_h, reg_l);
+                    uint16_t address = get_word(reg_h, reg_l);
                     reg_a = mem[address];
                 }
                 break;
-            case InstructionSet::JMP:
+            case JMP:
                 {
-                    program_counter = get_byte(mem[program_counter++], mem[program_counter++]);
+                    program_counter = get_word(mem[program_counter++], mem[program_counter++]);
                 }
                 break;
             default:
@@ -122,6 +452,7 @@ namespace lib8085
         }
     }
 
+#if 0
     std::ostream& operator<<(std::ostream& out, const Processor& cpu)
     {
         out.fill('0');
@@ -149,4 +480,5 @@ namespace lib8085
 
         return out;
     }
+#endif
 }

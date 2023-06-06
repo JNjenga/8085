@@ -27,7 +27,18 @@ namespace lib8085
 		void exec(int no_of_instructions);
         void reset();
         void print();
-        friend std::ostream& operator<<(std::ostream&, const Processor&);
+
+		uint8_t get_imm();
+		uint16_t get_imm_16();
+		uint8_t get_hl_mem();
+
+		void push_stack(uint8_t val);
+		void push_stack_16(uint16_t val);
+
+		uint8_t pop_stack();
+		uint16_t pop_stack_16();
+
+        // friend std::ostream& operator<<(std::ostream&, const Processor&);
 
         private:
         void add(int addend, bool with_carry);
