@@ -17,7 +17,7 @@ int main()
 
     cpu.exec(1);
 
-	std::cout << cpu;
+	// std::cout << cpu;
 
 	return 0;
 }

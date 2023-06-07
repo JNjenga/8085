@@ -2,7 +2,6 @@
 #include <iostream>
 #include <iomanip>
 
-#define get_word(h, l) ((h << 8) | l)
 #define get_hbyte(w) (w >> 8)
 #define get_lbyte(w) ((w << 8) >> 8)
 
@@ -49,11 +48,13 @@ namespace lib8085
         return mem[program_counter++];
     }
 
-    uint8_t Processor::get_hl_mem()
+    uint16_t Processor::get_word(uint8_t a, uint8_t b)
     {
-        uint16_t address = get_word(reg_h, reg_l);
+        uint16_t res = a;
+        res <<= 8;
+        res |= b;
 
-        return mem[address];
+        return res;
     }
 
     uint16_t Processor::get_imm_16()
@@ -131,7 +132,8 @@ namespace lib8085
                 break;
             case ADC_M:
                 {
-                    uint8_t operand = get_hl_mem();
+                    uint16_t hl = get_word(reg_h, reg_l);
+                    uint8_t operand = mem[hl];
 
                     add(operand, true);
                 }
@@ -173,7 +175,8 @@ namespace lib8085
                 break;
             case ADD_M:
                 {
-                    uint8_t operand = get_hl_mem();
+                    uint16_t hl = get_word(reg_h, reg_l);
+                    uint8_t operand = mem[hl];
 
                     add(operand, false);
                 }
@@ -264,7 +267,10 @@ namespace lib8085
                 break;
             case ANA_M:
                 {
-                    reg_a &= get_hl_mem();
+                    uint16_t hl = get_word(reg_h, reg_l);
+                    uint8_t operand = mem[hl];
+
+                    reg_a &= operand;
 
                     sign = reg_a < 0 ? true : false;
                     zero = reg_a == 0 ? true : false;
@@ -311,7 +317,7 @@ namespace lib8085
                 break;
             case CMA:
                 {
-                    reg_a ^= 1111_1111;
+                    reg_a ^= 11111111;
 
                 }
                 break;
@@ -357,7 +363,8 @@ namespace lib8085
                 break;
             case CMP_M:
                 {
-                    uint8_t operand = get_hl_mem();
+                    uint16_t hl = get_word(reg_h, reg_l);
+                    uint8_t operand = mem[hl];
 
                     cmp(reg_a, operand);
                 }
@@ -484,7 +491,7 @@ namespace lib8085
                 break;
             case DAA:
                 {
-                    uint8_t msn = (reg_a & 1111_0000) >> 4;
+                    uint8_t msn = (reg_a & 11110000) >> 4;
                     uint8_t lsn = reg_a >> 4;
 
                     if(lsn > 9)
@@ -522,7 +529,7 @@ namespace lib8085
                     res |= reg_e;
 
                     uint16_t hl = reg_h;
-                    hl <= 4;
+                    hl <<= 4;
                     hl |= reg_l;
 
                     res += hl;
@@ -533,7 +540,7 @@ namespace lib8085
             case DAD_H:
                 {
                     uint16_t res = reg_h;
-                    res <= 4;
+                    res <<= 4;
                     res |= reg_l;
 
                     res = res * 2;
@@ -544,7 +551,7 @@ namespace lib8085
             case DAD_SP:
                 {
                     uint16_t res = reg_h;
-                    res <= 4;
+                    res <<= 4;
                     res |= reg_l;
 
                     res = stack_pointer + res;
@@ -589,7 +596,9 @@ namespace lib8085
                 break;
             case DCR_M:
                 {
-                    uint8_t address = get_hl_mem();
+                    uint16_t hl = get_word(reg_h, reg_l);
+                    uint8_t address = mem[hl];
+
                     mem[address]--;
                 }
                 break;
@@ -631,6 +640,261 @@ namespace lib8085
                     stack_pointer --;
                 }
                 break;
+            case DI:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case EI:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case HLT:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case IN:
+                {
+                    uint8_t operand = get_imm();
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case INR_A:
+                {
+                    reg_a++;
+                }
+                break;
+            case INR_B:
+                {
+                    reg_b++;
+                }
+                break;
+            case INR_C:
+                {
+                    reg_c++;
+                }
+                break;
+            case INR_D:
+                {
+                    reg_d++;
+                }
+                break;
+            case INR_E:
+                {
+                    reg_e++;
+                }
+                break;
+            case INR_H:
+                {
+                    reg_h++;
+                }
+                break;
+            case INR_L:
+                {
+                    reg_l++;
+                }
+                break;
+            case INR_M:
+                {
+                    uint16_t hl = get_word(reg_h, reg_l);
+                    uint8_t address = mem[hl];
+
+                    mem[address]++;
+                }
+                break;
+            case INX_B:
+                {
+                    uint16_t rp = reg_b;
+                    rp <<= 4;
+                    rp |= reg_c;
+
+                    rp ++;
+                    reg_b = rp >> 4;
+                    reg_c = (rp << 4) >> 4;
+                }
+                break;
+            case INX_D:
+                {
+                    uint16_t rp = reg_d;
+                    rp <<= 4;
+                    rp |= reg_e;
+
+                    rp ++;
+                    reg_d = rp >> 4;
+                    reg_e = (rp << 4) >> 4;
+                }
+                break;
+            case INX_H:
+                {
+                    uint16_t rp = reg_h;
+                    rp <<= 4;
+                    rp |= reg_l;
+
+                    rp ++;
+                    reg_h = rp >> 4;
+                    reg_l = (rp << 4) >> 4;
+                }
+                break;
+            case INX_SP:
+                {
+                    stack_pointer ++;
+                }
+                break;
+            case JC:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    if(carry)
+                    {
+                        program_counter = operand;
+                    }
+                }
+                break;
+            case JNC:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    if(!carry)
+                    {
+                        program_counter = operand;
+                    }
+                }
+                break;
+            case JP:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    if(!sign)
+                    {
+                        program_counter = operand;
+                    }
+                }
+                break;
+            case JMP:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    program_counter = operand;
+                }
+                break;
+            case JM:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    if(sign)
+                    {
+                        program_counter = operand;
+                    }
+                }
+                break;
+            case JZ:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    if(zero)
+                    {
+                        program_counter = operand;
+                    }
+                }
+                break;
+            case JNZ:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    if(!zero)
+                    {
+                        program_counter = operand;
+                    }
+                }
+                break;
+            case JPE:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    if(parity)
+                    {
+                        program_counter = operand;
+                    }
+                }
+                break;
+            case JPO:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    if(!parity)
+                    {
+                        program_counter = operand;
+                    }
+                }
+                break;
+            case LDA:
+                {
+                    uint16_t operand = get_imm_16();
+
+                    reg_a = mem[operand];
+                }
+                break;
+            case LDAX_B:
+                {
+                    uint16_t address = reg_b;
+                    address <<= 4;
+                    address |= reg_c;
+
+                    reg_a = mem[address];
+                }
+                break;
+            case LDAX_D:
+                {
+                    uint16_t address = reg_d;
+                    address <<= 4;
+                    address |= reg_e;
+
+                    reg_a = mem[address];
+                }
+                break;
+            case LHLD:
+                {
+                    uint16_t address = get_imm_16();
+
+                    reg_l = mem[address];
+                    reg_h = mem[address+1];
+                }
+                break;
+            case LXI_B:
+                {
+                    uint16_t address = get_imm_16();
+
+                    reg_b = mem[address];
+                    reg_c = mem[address+1];
+                }
+                break;
+            case LXI_D:
+                {
+                    uint16_t address = get_imm_16();
+
+                    reg_d = mem[address];
+                    reg_e = mem[address+1];
+                }
+                break;
+            case LXI_H:
+                {
+                    uint16_t address = get_imm_16();
+
+                    reg_h = mem[address];
+                    reg_l = mem[address+1];
+                }
+                break;
+            case LXI_SP:
+                {
+                    uint16_t address = get_imm_16();
+
+                    stack_pointer = mem[address];
+                    stack_pointer <<= 8;
+                    stack_pointer |= mem[address+1];
+                }
+                break;
             case MOV_A_A:
                 {
                     reg_a = reg_a;
@@ -647,9 +911,357 @@ namespace lib8085
                     reg_a = mem[address];
                 }
                 break;
-            case JMP:
+            case MVI_A:
                 {
-                    program_counter = get_word(mem[program_counter++], mem[program_counter++]);
+                    uint8_t operand = get_imm();
+                    reg_a = operand;
+                }
+                break;
+            case MVI_B:
+                {
+                    uint8_t operand = get_imm();
+                    reg_b = operand;
+                }
+                break;
+            case MVI_C:
+                {
+                    uint8_t operand = get_imm();
+                    reg_c = operand;
+                }
+                break;
+            case MVI_D:
+                {
+                    uint8_t operand = get_imm();
+                    reg_d = operand;
+                }
+                break;
+            case MVI_E:
+                {
+                    uint8_t operand = get_imm();
+                    reg_e = operand;
+                }
+                break;
+            case MVI_H:
+                {
+                    uint8_t operand = get_imm();
+                    reg_h = operand;
+                }
+                break;
+            case MVI_L:
+                {
+                    uint8_t operand = get_imm();
+                    reg_l = operand;
+                }
+                break;
+            case MVI_M:
+                {
+                    uint16_t hl = get_word(reg_h, reg_l);
+                    uint8_t operand = mem[hl];
+
+                    reg_a = operand;
+                }
+                break;
+            case NOP:
+                {
+                }
+                break;
+            case ORA_A:
+                {
+                    or(reg_a, reg_a);
+                }
+                break;
+            case ORA_B:
+                {
+                    or(reg_a, reg_b);
+                }
+                break;
+            case ORA_C:
+                {
+                    or(reg_a, reg_c);
+                }
+                break;
+            case ORA_D:
+                {
+                    or(reg_a, reg_d);
+                }
+                break;
+            case ORA_E:
+                {
+                    or(reg_a, reg_e);
+                }
+                break;
+            case ORA_H:
+                {
+                    or(reg_a, reg_h);
+                }
+                break;
+            case ORA_L:
+                {
+                    or(reg_a, reg_l);
+                }
+                break;
+            case ORA_M:
+                {
+                    uint16_t hl = get_word(reg_h, reg_l);
+                    uint8_t operand = mem[hl];
+
+                    or(reg_a, operand);
+                }
+                break;
+            case OUT:
+                {
+                    uint8_t operand = get_imm();
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case PCHL:
+                {
+                    uint16_t hl = get_word(reg_h, reg_l);
+                    program_counter = hl;
+                }
+                break;
+            case POP_B:
+                {
+                    uint16_t data = mem[stack_pointer++];
+                    reg_c = data;
+
+                    data = mem[stack_pointer++];
+                    reg_b = data;
+                }
+                break;
+            case POP_D:
+                {
+                    uint16_t data = mem[stack_pointer++];
+                    reg_e = data;
+
+                    data = mem[stack_pointer++];
+                    reg_d = data;
+                }
+                break;
+            case POP_H:
+                {
+                    uint16_t data = mem[stack_pointer++];
+                    reg_l = data;
+
+                    data = mem[stack_pointer++];
+                    reg_h = data;
+                }
+                break;
+            case POP_PSW:
+                {
+                    uint16_t data = mem[stack_pointer++];
+
+                    if(data & 10000000 == 10000000)
+                        sign = true;
+                    else
+                        sign = false;
+                    if(data & 01000000 == 01000000)
+                        zero = true;
+                    else
+                        zero = false;
+
+                    if(data & 00010000 == 00010000)
+                        auxiliary_carry = true;
+                    else
+                        auxiliary_carry = false;
+
+                    if(data & 00000100 == 00000100)
+                        parity = true;
+                    else
+                        parity = false;
+
+                    if(data & 00000001 == 00000001)
+                        carry = true;
+                    else
+                        carry = false;
+                }
+                break;
+            case RAL:
+                {
+                    if(reg_a & 10000000)
+                    {
+                        carry = true;
+                    }
+                    else
+                    {
+                        carry = false;
+                    }
+
+                    reg_a <<= 1;
+                }
+                break;
+            case RAR:
+                {
+                    reg_a >>= 1;
+
+                    if(carry)
+                    {
+                        reg_a |= 10000000;
+                    }
+                    else
+                    {
+                        reg_a ^= (reg_a >> 7) << 7;
+                    }
+                }
+                break;
+            case RC:
+                {
+                    if(carry)
+                    {
+                        // TODO: Check for overflow errors
+                        program_counter = get_word(mem[stack_pointer++], mem[stack_pointer++]);
+                    }
+                }
+                break;
+            case RET:
+                {
+                    // TODO: Check for overflow errors
+                    program_counter = get_word(mem[stack_pointer++], mem[stack_pointer++]);
+                }
+                break;
+            case RIM:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case RLC:
+                {
+                    uint8_t tmp = reg_a;
+
+                    reg_a <<= 1;
+
+                    if(tmp & 10000000)
+                    {
+                        carry = true;
+                        reg_a |= 00000001;
+                    }
+                    else
+                    {
+                        carry = false;
+                        reg_a ^= (reg_a << 7) >> 7;
+                    }
+
+                }
+                break;
+            case RM:
+                {
+                    if(sign)
+                    {
+                        // TODO: Check for overflow errors
+                        program_counter = get_word(mem[stack_pointer++], mem[stack_pointer++]);
+                    }
+                }
+                break;
+            case RNC:
+                {
+                    if(!carry)
+                    {
+                        // TODO: Check for overflow errors
+                        program_counter = get_word(mem[stack_pointer++], mem[stack_pointer++]);
+                    }
+                }
+                break;
+            case RNZ:
+                {
+                    if(!zero)
+                    {
+                        // TODO: Check for overflow errors
+                        program_counter = get_word(mem[stack_pointer++], mem[stack_pointer++]);
+                    }
+                }
+                break;
+            case RP:
+                {
+                    if(!sign)
+                    {
+                        // TODO: Check for overflow errors
+                        program_counter = get_word(mem[stack_pointer++], mem[stack_pointer++]);
+                    }
+                }
+                break;
+            case RPE:
+                {
+                    if(parity)
+                    {
+                        // TODO: Check for overflow errors
+                        program_counter = get_word(mem[stack_pointer++], mem[stack_pointer++]);
+                    }
+                }
+                break;
+            case RPO:
+                {
+                    if(!parity)
+                    {
+                        // TODO: Check for overflow errors
+                        program_counter = get_word(mem[stack_pointer++], mem[stack_pointer++]);
+                    }
+                }
+                break;
+            case RRC:
+                {
+                    uint8_t tmp = reg_a;
+
+                    reg_a <<= 1;
+
+                    if(tmp & 00000001)
+                    {
+                        carry = true;
+                        reg_a |= 00000001;
+                    }
+                    else
+                    {
+                        carry = false;
+                        reg_a ^= (reg_a >> 7) << 7;
+                    }
+                }
+                break;
+            case RST_0:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case RST_1:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case RST_2:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case RST_3:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case RST_4:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case RST_5:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case RST_6:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case RST_7:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case RZ:
+                {
+                    if(zero)
+                    {
+                        // TODO: Check for overflow errors
+                        program_counter = get_word(mem[stack_pointer++], mem[stack_pointer++]);
+                    }
                 }
                 break;
             default:
@@ -676,6 +1288,32 @@ namespace lib8085
         {
             reg_a += addend;
         }
+    }
+
+    uint8_t Processor::or(uint8_t a, uint8_t b)
+    {
+        a |= b;
+
+        if(a < 0)
+        {
+            sign = true;
+            zero = false;
+        }
+        else if(a > 0)
+        {
+            sign = false; 
+            zero = false;
+        }
+        else if(a == 0)
+        {
+            sign = false;
+            zero = true;
+        }
+
+        carry = 0;
+        auxiliary_carry = 0;
+
+        return a;
     }
 
     void Processor::cmp(uint8_t a, uint8_t b)

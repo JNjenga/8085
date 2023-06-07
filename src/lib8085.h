@@ -28,21 +28,23 @@ namespace lib8085
         void reset();
         void print();
 
-		uint8_t get_imm();
-		uint16_t get_imm_16();
-		uint8_t get_hl_mem();
+        uint8_t get_imm();
+        uint16_t get_imm_16();
 
-		void push_stack(uint8_t val);
-		void push_stack_16(uint16_t val);
+        uint16_t get_word(uint8_t a, uint8_t b);
 
-		uint8_t pop_stack();
-		uint16_t pop_stack_16();
+        void push_stack(uint8_t val);
+        void push_stack_16(uint16_t val);
+
+        uint8_t pop_stack();
+        uint16_t pop_stack_16();
 
         // friend std::ostream& operator<<(std::ostream&, const Processor&);
 
         private:
         void add(int addend, bool with_carry);
         void cmp(uint8_t a, uint8_t b);
+        uint8_t or(uint8_t a, uint8_t b);
     };
 
 }
