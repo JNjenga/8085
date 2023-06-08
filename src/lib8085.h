@@ -45,6 +45,8 @@ namespace lib8085
         void add(int addend, bool with_carry);
         void cmp(uint8_t a, uint8_t b);
         uint8_t or(uint8_t a, uint8_t b);
+        void sub(uint8_t subtrahend, bool with_carry);
+        uint8_t xor(uint8_t a, uint8_t b);
     };
 
 }

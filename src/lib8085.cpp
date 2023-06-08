@@ -1264,12 +1264,251 @@ namespace lib8085
                     }
                 }
                 break;
+            case SBB_A:
+                {
+                    sub(reg_a, true);
+                }
+                break;
+            case SBB_B:
+                {
+                    sub(reg_b, true);
+                }
+                break;
+            case SBB_C:
+                {
+                    sub(reg_c, true);
+                }
+                break;
+            case SBB_D:
+                {
+                    sub(reg_d, true);
+                }
+                break;
+            case SBB_E:
+                {
+                    sub(reg_e, true);
+                }
+                break;
+            case SBB_H:
+                {
+                    sub(reg_h, true);
+                }
+                break;
+            case SBB_L:
+                {
+                    sub(reg_l, true);
+                }
+                break;
+            case SBB_M:
+                {
+                    uint8_t operand = mem[get_word(reg_h, reg_l)];
+                    sub(operand, true);
+                }
+                break;
+            case SBI:
+                {
+                    uint8_t operand = get_imm();
+                    sub(operand, true);
+                }
+                break;
+            case SHLD:
+                {
+                    uint16_t address = get_imm_16();
+                    mem[address] = reg_l;
+                    mem[address++] = reg_h;
+                }
+                break;
+            case SIM:
+                {
+                    throw std::exception("Not implemented yet");
+                }
+                break;
+            case SPHL:
+                {
+                    stack_pointer = reg_h;
+                    stack_pointer <<= 8;
+                    stack_pointer &= 0xff00;
+                    stack_pointer |= reg_l;
+                }
+                break;
+            case STA:
+                {
+                    uint16_t address = get_imm_16();
+                    mem[address] = reg_a;
+                }
+                break;
+            case STAX_B:
+                {
+                    uint16_t address = get_word(reg_b, reg_c);
+                    mem[address] = reg_a;
+                }
+                break;
+            case STAX_D:
+                {
+                    uint16_t address = get_word(reg_d, reg_e);
+                    mem[address] = reg_a;
+                }
+                break;
+            case STAX_H:
+                {
+                    uint16_t address = get_word(reg_h, reg_l);
+                    mem[address] = reg_a;
+                }
+                break;
+            case STC:
+                {
+                    carry = true;
+                }
+                break;
+            case SUB_A:
+                {
+                    sub(reg_a, false);
+                }
+                break;
+            case SUB_B:
+                {
+                    sub(reg_b, false);
+                }
+                break;
+            case SUB_C:
+                {
+                    sub(reg_c, false);
+                }
+                break;
+            case SUB_D:
+                {
+                    sub(reg_d, false);
+                }
+                break;
+            case SUB_E:
+                {
+                    sub(reg_e, false);
+                }
+                break;
+            case SUB_H:
+                {
+                    sub(reg_h, false);
+                }
+                break;
+            case SUB_L:
+                {
+                    sub(reg_l, false);
+                }
+                break;
+            case SUB_M:
+                {
+                    uint16_t address = get_word(reg_h, reg_l);
+
+                    sub(mem[address], false);
+                }
+                break;
+            case SUI:
+                {
+                    uint8_t operand = get_imm();
+                    sub(operand, false);
+                }
+                break;
+            case XCHG:
+                {
+                    uint8_t tmp = reg_h;
+                    reg_h = reg_d;
+                    reg_d = tmp;
+
+                    tmp = reg_l;
+                    reg_l = reg_e;
+                    reg_e = tmp;
+                }
+                break;
+            case XRA_A:
+                {
+                    xor(reg_a, reg_a);
+                }
+                break;
+            case XRA_B:
+                {
+                    xor(reg_a, reg_b);
+                }
+                break;
+            case XRA_C:
+                {
+                    xor(reg_a, reg_c);
+                }
+                break;
+            case XRA_D:
+                {
+                    xor(reg_a, reg_d);
+                }
+                break;
+            case XRA_E:
+                {
+                    xor(reg_a, reg_e);
+                }
+                break;
+            case XRA_H:
+                {
+                    xor(reg_a, reg_h);
+                }
+                break;
+            case XRA_L:
+                {
+                    xor(reg_a, reg_l);
+                }
+                break;
+            case XRA_M:
+                {
+                    uint8_t operand = mem[get_word(reg_h, reg_l)];
+                    xor(reg_a, operand);
+                }
+                break;
+            case XRI:
+                {
+                    uint8_t operand = get_imm();
+                    xor(reg_a, operand);
+                }
+                break;
+            case XTHL:
+                {
+                    uint8_t tmp = mem[stack_pointer];
+                    mem[stack_pointer] = reg_l;
+                    reg_l = tmp;
+
+                    tmp = mem[stack_pointer+1];
+                    mem[stack_pointer+1] = reg_h;
+                    reg_h = tmp;
+                }
+                break;
             default:
                 {
                     // TODO: Handle error
                 }
                 break;
         }
+    }
+
+    uint8_t Processor::xor(uint8_t a, uint8_t b)
+    {
+        a ^= b;
+
+        if(a < 0)
+        {
+            sign = true;
+            zero = false;
+        }
+        else if(a > 0)
+        {
+            sign = false; 
+            zero = false;
+        }
+        else if(a == 0)
+        {
+            sign = false;
+            zero = true;
+        }
+
+        carry = 0;
+        auxiliary_carry = 0;
+
+        return a;
     }
 
     void Processor::add(int addend, bool with_carry)
@@ -1280,13 +1519,36 @@ namespace lib8085
 
             if(res > 0xff)
             {
-                // Remove higher nibble and store value to reg_a
-                reg_a = res & 0x0f;
+                carry = true;
             }
+
+            // Remove higher nibble and store value to reg_a
+            reg_a = (uint8_t)(res & 0x00ff);
         }
         else
         {
             reg_a += addend;
+        }
+    }
+
+    void Processor::sub(uint8_t subtrahend, bool with_carry)
+    {
+        uint16_t res = reg_a + ~subtrahend + 1;
+
+        reg_a = reg_a + ~subtrahend + 1;
+
+        if(with_carry)
+        {
+            reg_a += carry;
+        }
+
+        if(res > 0xff)
+        {
+            carry = false;
+        }
+        else
+        {
+            carry = true;
         }
     }
 
