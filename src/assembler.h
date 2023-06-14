@@ -10,6 +10,7 @@ namespace lib8085
         LABEL,
         NAME,
         COMMENT,
+        REG,
         UNKNOWN
     };
 
@@ -22,13 +23,12 @@ namespace lib8085
         TokenType tt;
     };
 
-    /*
     struct OpcodeRule
     {
         // addressing mode
         // operand count
+        int operand_count;
     };
-    */
 
     class Assembler
     {
@@ -37,9 +37,16 @@ namespace lib8085
             ~Assembler();
 
             void tokenize();
+            void parse();
             void print_tokens();
         private:
             std::string& _code;
             std::vector<Token> _tokens;
+            std::vector<std::string> _opcode_strs;
+            std::vector<std::string> _directive_strs;
+
+            bool is_reg(const std::string& str) const;
+            bool is_opcode(const std::string& str) const;
+            bool is_directive(const std::string& str) const;
     };
 }
