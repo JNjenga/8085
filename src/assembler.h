@@ -13,7 +13,7 @@ namespace lib8085
         REG,
         OPERAND,
         UNKNOWN,
-        EOF
+        _EOF
     };
 
     struct Token

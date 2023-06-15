@@ -118,6 +118,13 @@ namespace lib8085
                 col_number = 0;
             }
         }
+
+        t.line_number = line_number;
+        t.col_number = 0;
+        t.token_string = "_EOF";
+        t.tt = TokenType::_EOF;
+
+        _tokens.push_back(t);
     }
 
     void Assembler::parse()
@@ -128,57 +135,11 @@ namespace lib8085
         }
 
         Token t = _tokens[0];
-        Token src_token;
-        Token dest_token;
-        OpcodeRule rule;
 
-        while(t.tt != TokenType::EOF)
+        while(t.tt != TokenType::_EOF)
         {
             if(t.tt == TokenType::OPCODE)
             {
-                rule = get_opcode_rule(t.token_string);
-
-                if(rule.operand_count == 1)
-                {
-                    src_token = peek_token();
-
-                    if(!is_valid_operand(src_token))
-                    {
-                        std::cout << "Error at line " << src_token.line_number << ":" << src_token.col_number << std::endl 
-                            "Invalid src operand \"" << src_token.token_string << "\" for opcode " << t.token_string << std::endl;
-                        return;
-                    }
-
-                    next_token();
-                }
-                else if(rule.operand_count > 1)
-                {
-                    src_token = peek_token();
-
-                    if(!is_valid_operand(src_token))
-                    {
-                        std::cout << "Error at line " << src_token.line_number << ":" << src_token.col_number << std::endl 
-                            "Invalid src operand \"" << src_token.token_string << "\" for opcode " << t.token_string << std::endl;
-                        return;
-                    }
-
-                    next_token();
-
-                    dest_token = peek_token();
-
-                    if(!is_valid_operand(dest_token))
-                    {
-                        std::cout << "Error at line " << dest_token.line_number << ":" << dest_token.col_number << std::endl 
-                            "Invalid dest operand \"" << dest_token.token_string << "\" for opcode " << t.token_string << std::endl;
-                        return;
-                    }
-
-                    next_token();
-                }
-                else
-                {
-                    // TODO: token_str to InstructionSet type
-                }
             }
 
             t = next_token();
@@ -219,14 +180,14 @@ namespace lib8085
 
     Token& Assembler::next_token()
     {
-        Token t;
+        Token& t = peek_token();
+        _current_token++;
 
-        do
+        while(t.tt == TokenType::COMMENT);
         {
             t = peek_token();
             _current_token ++;
-        } while(t.tt == TokenType::COMMENT)
-
+        }
         return t;
     }
 
