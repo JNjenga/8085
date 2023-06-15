@@ -11,7 +11,9 @@ namespace lib8085
         NAME,
         COMMENT,
         REG,
-        UNKNOWN
+        OPERAND,
+        UNKNOWN,
+        EOF
     };
 
     struct Token
@@ -28,6 +30,7 @@ namespace lib8085
         // addressing mode
         // operand count
         int operand_count;
+        std::string opcode;
     };
 
     class Assembler
@@ -44,9 +47,13 @@ namespace lib8085
             std::vector<Token> _tokens;
             std::vector<std::string> _opcode_strs;
             std::vector<std::string> _directive_strs;
+            size_t _current_token;
 
             bool is_reg(const std::string& str) const;
             bool is_opcode(const std::string& str) const;
             bool is_directive(const std::string& str) const;
+
+            Token& next_token();
+            Token& peek_token();
     };
 }

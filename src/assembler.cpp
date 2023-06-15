@@ -6,8 +6,9 @@
 
 namespace lib8085
 {
-    Assembler::Assembler(std::string& code) : _code(code)
+    Assembler::Assembler(std::string& code) : _code(code), _current_token(0)
     {
+        _opcode_strs = { "ACI" , "ADC" , "ADD" , "ADI" , "ANA" , "ANI" , "CALL" , "CC" , "CM," , "CMA" , "CMC" , "CMP" , "CNC" , "CNZ" , "CP," , "CPE" , "CPI" , "CPO" , "CZ," , "DAA" , "DAD" , "DCR" , "DCX" , "DI," , "EI," , "HLT" , "IN," , "INR" , "INX" , "JC," , "JM," , "JMP" , "JNC" , "JNZ" , "JP," , "JPE" , "JPO" , "JZ," , "LDA" , "LDAX" , "LHLD" , "LXI" , "MOV" , "MVI" , "NOP" , "ORA" , "ORI" , "OUT" , "PCHL" , "POP" , "PUSH" , "RAL" , "RAR" , "RC," , "RET" , "RIM" , "RLC" , "RM," , "RNC" , "RNZ" , "RP," , "RPE" , "RPO" , "RRC" , "RST_0" , "RST_1" , "RST_2" , "RST_3" , "RST_4" , "RST_5" , "RST_6" , "RST_7" , "RZ" , "SBB" , "SBI" , "SHLD" , "SIM" , "SPH" , "STA" , "STAX" , "STC" , "SUB" , "SUI" , "XCHG" , "XRA" , "XRI" , "XTHL" };
         // TODO: Initialize _opcode_strs
         // TODO: Initialize _directive_strs
     }
@@ -30,24 +31,11 @@ namespace lib8085
         int line_number = 1;
         int col_number = 0;
         int token_col_number = 0;
-        bool token_complete = false;
 
         for(size_t i = 0; i < _code.size(); i ++)
         {
             c = _code[i];
             col_number++;
-
-            if(token_complete)
-            {
-                t.line_number = line_number;
-                t.col_number = token_col_number;
-                _tokens.push_back(t);
-                token_complete = false;
-
-                t.token_string = "";
-                token_col_number = col_number;
-            }
-
 
             if(is_comment)
             {
@@ -59,7 +47,6 @@ namespace lib8085
                     t.line_number = line_number;
                     t.col_number = token_col_number;
                     _tokens.push_back(t);
-                    token_complete = false;
 
                     t.token_string = "";
                     token_col_number = col_number;
@@ -77,7 +64,6 @@ namespace lib8085
                 t.line_number = line_number;
                 t.col_number = token_col_number;
                 _tokens.push_back(t);
-                token_complete = false;
 
                 t.token_string = "";
                 token_col_number = col_number;
@@ -108,7 +94,6 @@ namespace lib8085
                     t.line_number = line_number;
                     t.col_number = token_col_number;
                     _tokens.push_back(t);
-                    token_complete = false;
 
                     t.token_string = "";
                     token_col_number = col_number;
@@ -137,7 +122,68 @@ namespace lib8085
 
     void Assembler::parse()
     {
-        // TODO: Implement
+        if(_tokens.size() == 0)
+        {
+            return;
+        }
+
+        Token t = _tokens[0];
+        Token src_token;
+        Token dest_token;
+        OpcodeRule rule;
+
+        while(t.tt != TokenType::EOF)
+        {
+            if(t.tt == TokenType::OPCODE)
+            {
+                rule = get_opcode_rule(t.token_string);
+
+                if(rule.operand_count == 1)
+                {
+                    src_token = peek_token();
+
+                    if(!is_valid_operand(src_token))
+                    {
+                        std::cout << "Error at line " << src_token.line_number << ":" << src_token.col_number << std::endl 
+                            "Invalid src operand \"" << src_token.token_string << "\" for opcode " << t.token_string << std::endl;
+                        return;
+                    }
+
+                    next_token();
+                }
+                else if(rule.operand_count > 1)
+                {
+                    src_token = peek_token();
+
+                    if(!is_valid_operand(src_token))
+                    {
+                        std::cout << "Error at line " << src_token.line_number << ":" << src_token.col_number << std::endl 
+                            "Invalid src operand \"" << src_token.token_string << "\" for opcode " << t.token_string << std::endl;
+                        return;
+                    }
+
+                    next_token();
+
+                    dest_token = peek_token();
+
+                    if(!is_valid_operand(dest_token))
+                    {
+                        std::cout << "Error at line " << dest_token.line_number << ":" << dest_token.col_number << std::endl 
+                            "Invalid dest operand \"" << dest_token.token_string << "\" for opcode " << t.token_string << std::endl;
+                        return;
+                    }
+
+                    next_token();
+                }
+                else
+                {
+                    // TODO: token_str to InstructionSet type
+                }
+            }
+
+            t = next_token();
+        }
+
     }
 
     bool Assembler::is_reg(const std::string& str) const
@@ -169,5 +215,28 @@ namespace lib8085
             return true;
         }
         return false;
+    }
+
+    Token& Assembler::next_token()
+    {
+        Token t;
+
+        do
+        {
+            t = peek_token();
+            _current_token ++;
+        } while(t.tt == TokenType::COMMENT)
+
+        return t;
+    }
+
+    Token& Assembler::peek_token()
+    {
+        if(_current_token >= _tokens.size())
+        {
+            return _tokens[_tokens.size()];
+        }
+
+        return _tokens[_current_token];
     }
 }
