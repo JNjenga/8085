@@ -48,6 +48,7 @@ namespace lib8085
             std::vector<std::string> _opcode_strs;
             std::vector<std::string> _directive_strs;
             size_t _current_token;
+            std::vector<uint8_t> _program_instructions;
 
             bool is_reg(const std::string& str) const;
             bool is_opcode(const std::string& str) const;
@@ -55,5 +56,7 @@ namespace lib8085
 
             Token& next_token();
             Token& peek_token();
+            bool parse_data_byte(const Token& t, uint8_t& operand_byte);
+            bool parse_data_word(const Token& t, uint16_t& operand_word);
     };
 }
