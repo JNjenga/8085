@@ -29,6 +29,7 @@ namespace lib8085
         Token t;
         char c;
         bool is_comment = false;
+        bool is_string = false;
         int line_number = 1;
         int col_number = 0;
         int token_col_number = 0;
@@ -58,6 +59,18 @@ namespace lib8085
                 }
 
                 continue;
+            }
+            if(is_string)
+            {
+                if(c == '\n')
+                {
+                    std::cout << "Error: Expected closing quote character \' at " << token_col_number << "\' at line ";
+                        return;
+                }
+                else
+                {
+                    t.token_string += c;
+                }
             }
             else if(c == ':')
             {
@@ -111,6 +124,19 @@ namespace lib8085
                 is_comment = true;
                 t.tt = TokenType::COMMENT;
                 token_col_number = col_number;
+            }
+            else if(c == '\'')
+            {
+                if(is_string)
+                {
+                    is_string = false;
+                    t.tt = TokenType::OPERAND_ASCII_STR;
+                    token_col_number = col_number;
+                }
+                else
+                {
+                    is_string = true;
+                }
             }
 
             if(c == '\n')
