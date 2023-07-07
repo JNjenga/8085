@@ -647,6 +647,618 @@ namespace lib8085
 
                     _program_instructions.push_back(opcode);
                 }
+                else if(tstring == "JC")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::JC);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "JM")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::JM);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "JMP")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::JMP);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "JNC")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::JNC);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "JP")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::JP);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "JPE")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::JPE);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "JPO")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::JPO);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "JZ")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::JZ);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "LDA")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::LDA);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "LDAX")
+                {
+                    src_token = next_token();
+
+                    if(src_token.tt != TokenType::REG)
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    uint8_t opcode;
+                    if(src_token.token_string == "B")
+                        opcode = InstructionSet::LDAX_B;
+                    else if(src_token.token_string == "D")
+                        opcode = InstructionSet::LDAX_D;
+
+                    _program_instructions.push_back(opcode);
+                }
+                else if(tstring == "LHLD")
+                {
+                    src_token = next_token();
+
+                    if(parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::LHLD);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "LXI")
+                {
+                    dest_token = next_token();
+
+                    if(dest_token.tt != TokenType::REG)
+                    {
+                        std::cout << "Invalid operand \'" << dest_token.token_string << "\' at line "
+                            << dest_token.line_number << ":" << dest_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    src_token = next_token();
+
+                    if(!parse_data_word(src_token, operand_word))
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    uint8_t opcode;
+                    if(dest_token.token_string == "B")
+                        opcode = InstructionSet::LXI_B;
+                    else if(dest_token.token_string == "D")
+                        opcode = InstructionSet::LXI_D;
+                    else if(dest_token.token_string == "H")
+                        opcode = InstructionSet::LXI_H;
+                    else
+                        opcode = InstructionSet::LXI_SP;
+
+                    _program_instructions.push_back(opcode);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "MOV")
+                {
+                    dest_token = next_token();
+
+                    if(dest_token.tt != TokenType::REG)
+                    {
+                        std::cout << "Invalid operand \'" << dest_token.token_string << "\' at line "
+                            << dest_token.line_number << ":" << src_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    src_token = next_token();
+
+                    if(src_token.tt != TokenType::REG)
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    const std::string& reg1 = dest_token.token_string;
+                    const std::string& reg2 = src_token.token_string;
+
+                    uint8_t opcode;
+                    if(reg1 == reg2)
+                        opcode = InstructionSet::NOP;
+                    else if(reg1 == "A" && reg2 == "B")
+                        opcode = InstructionSet::MOV_A_B;
+                    else if(reg1 == "A" && reg2 == "C")
+                        opcode = InstructionSet::MOV_A_C;
+                    else if(reg1 == "A" && reg2 == "D")
+                        opcode = InstructionSet::MOV_A_D;
+                    else if(reg1 == "A" && reg2 == "E")
+                        opcode = InstructionSet::MOV_A_E;
+                    else if(reg1 == "A" && reg2 == "H")
+                        opcode = InstructionSet::MOV_A_H;
+                    else if(reg1 == "A" && reg2 == "L")
+                        opcode = InstructionSet::MOV_A_L;
+                    else if(reg1 == "A" && reg2 == "M")
+                        opcode = InstructionSet::MOV_A_M;
+                    else if(reg1 == "B" && reg2 == "A")
+                        opcode = InstructionSet::MOV_B_A;
+                    else if(reg1 == "B" && reg2 == "C")
+                        opcode = InstructionSet::MOV_B_C;
+                    else if(reg1 == "B" && reg2 == "D")
+                        opcode = InstructionSet::MOV_B_D;
+                    else if(reg1 == "B" && reg2 == "E")
+                        opcode = InstructionSet::MOV_B_E;
+                    else if(reg1 == "B" && reg2 == "H")
+                        opcode = InstructionSet::MOV_B_H;
+                    else if(reg1 == "B" && reg2 == "L")
+                        opcode = InstructionSet::MOV_B_L;
+                    else if(reg1 == "B" && reg2 == "M")
+                        opcode = InstructionSet::MOV_B_M;
+                    else if(reg1 == "C" && reg2 == "A")
+                        opcode = InstructionSet::MOV_C_A;
+                    else if(reg1 == "C" && reg2 == "B")
+                        opcode = InstructionSet::MOV_C_B;
+                    else if(reg1 == "C" && reg2 == "D")
+                        opcode = InstructionSet::MOV_C_D;
+                    else if(reg1 == "C" && reg2 == "E")
+                        opcode = InstructionSet::MOV_C_E;
+                    else if(reg1 == "C" && reg2 == "H")
+                        opcode = InstructionSet::MOV_C_H;
+                    else if(reg1 == "C" && reg2 == "L")
+                        opcode = InstructionSet::MOV_C_L;
+                    else if(reg1 == "C" && reg2 == "M")
+                        opcode = InstructionSet::MOV_C_M;
+                    else if(reg1 == "D" && reg2 == "A")
+                        opcode = InstructionSet::MOV_D_A;
+                    else if(reg1 == "D" && reg2 == "B")
+                        opcode = InstructionSet::MOV_D_B;
+                    else if(reg1 == "D" && reg2 == "C")
+                        opcode = InstructionSet::MOV_D_C;
+                    else if(reg1 == "D" && reg2 == "E")
+                        opcode = InstructionSet::MOV_D_E;
+                    else if(reg1 == "D" && reg2 == "H")
+                        opcode = InstructionSet::MOV_D_H;
+                    else if(reg1 == "D" && reg2 == "L")
+                        opcode = InstructionSet::MOV_D_L;
+                    else if(reg1 == "D" && reg2 == "M")
+                        opcode = InstructionSet::MOV_D_M;
+                    else if(reg1 == "E" && reg2 == "A")
+                        opcode = InstructionSet::MOV_E_A;
+                    else if(reg1 == "E" && reg2 == "B")
+                        opcode = InstructionSet::MOV_E_B;
+                    else if(reg1 == "E" && reg2 == "C")
+                        opcode = InstructionSet::MOV_E_C;
+                    else if(reg1 == "E" && reg2 == "D")
+                        opcode = InstructionSet::MOV_E_D;
+                    else if(reg1 == "E" && reg2 == "H")
+                        opcode = InstructionSet::MOV_E_H;
+                    else if(reg1 == "E" && reg2 == "L")
+                        opcode = InstructionSet::MOV_E_L;
+                    else if(reg1 == "E" && reg2 == "M")
+                        opcode = InstructionSet::MOV_E_M;
+                    else if(reg1 == "H" && reg2 == "A")
+                        opcode = InstructionSet::MOV_H_A;
+                    else if(reg1 == "H" && reg2 == "B")
+                        opcode = InstructionSet::MOV_H_B;
+                    else if(reg1 == "H" && reg2 == "C")
+                        opcode = InstructionSet::MOV_H_C;
+                    else if(reg1 == "H" && reg2 == "D")
+                        opcode = InstructionSet::MOV_H_D;
+                    else if(reg1 == "H" && reg2 == "E")
+                        opcode = InstructionSet::MOV_H_E;
+                    else if(reg1 == "H" && reg2 == "L")
+                        opcode = InstructionSet::MOV_H_L;
+                    else if(reg1 == "H" && reg2 == "M")
+                        opcode = InstructionSet::MOV_H_M;
+                    else if(reg1 == "L" && reg2 == "A")
+                        opcode = InstructionSet::MOV_L_A;
+                    else if(reg1 == "L" && reg2 == "B")
+                        opcode = InstructionSet::MOV_L_B;
+                    else if(reg1 == "L" && reg2 == "C")
+                        opcode = InstructionSet::MOV_L_C;
+                    else if(reg1 == "L" && reg2 == "D")
+                        opcode = InstructionSet::MOV_L_D;
+                    else if(reg1 == "L" && reg2 == "E")
+                        opcode = InstructionSet::MOV_L_E;
+                    else if(reg1 == "L" && reg2 == "H")
+                        opcode = InstructionSet::MOV_L_H;
+                    else if(reg1 == "L" && reg2 == "M")
+                        opcode = InstructionSet::MOV_L_M;
+                    else if(reg1 == "M" && reg2 == "A")
+                        opcode = InstructionSet::MOV_M_A;
+                    else if(reg1 == "M" && reg2 == "B")
+                        opcode = InstructionSet::MOV_M_B;
+                    else if(reg1 == "M" && reg2 == "C")
+                        opcode = InstructionSet::MOV_M_C;
+                    else if(reg1 == "M" && reg2 == "D")
+                        opcode = InstructionSet::MOV_M_D;
+                    else if(reg1 == "M" && reg2 == "E")
+                        opcode = InstructionSet::MOV_M_E;
+                    else if(reg1 == "M" && reg2 == "H")
+                        opcode = InstructionSet::MOV_M_H;
+                    else if(reg1 == "M" && reg2 == "L")
+                        opcode = InstructionSet::MOV_M_L;
+
+                    _program_instructions.push_back(opcode);
+                }
+                else if(tstring == "MVI")
+                {
+                    dest_token = next_token();
+
+                    if(dest_token.tt != TokenType::REG)
+                    {
+                        std::cout << "Invalid operand \'" << dest_token.token_string << "\' at line "
+                            << dest_token.line_number << ":" << dest_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    src_token = next_token();
+
+                    if(!parse_data_byte(src_token, operand_byte))
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    uint8_t opcode;
+                    if(dest_token.token_string == "A")
+                        opcode = InstructionSet::MVI_A;
+                    else if(dest_token.token_string == "B")
+                        opcode = InstructionSet::MVI_B;
+                    else if(dest_token.token_string == "C")
+                        opcode = InstructionSet::MVI_C;
+                    else if(dest_token.token_string == "D")
+                        opcode = InstructionSet::MVI_D;
+                    else if(dest_token.token_string == "E")
+                        opcode = InstructionSet::MVI_E;
+                    else if(dest_token.token_string == "L")
+                        opcode = InstructionSet::MVI_L;
+                    else if(dest_token.token_string == "H")
+                        opcode = InstructionSet::MVI_H;
+                    else if(dest_token.token_string == "M")
+                        opcode = InstructionSet::MVI_M;
+
+                    _program_instructions.push_back(opcode);
+                    _program_instructions.push_back(operand_byte);
+                }
+                else if(tstring == "NOP")
+                {
+                    _program_instructions.push_back(InstructionSet::NOP);
+                }
+                else if(tstring == "ORA")
+                {
+                    src_token = next_token();
+
+                    if(src_token.tt != TokenType::REG)
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    uint8_t opcode;
+                    if(src_token.token_string == "A")
+                        opcode = InstructionSet::ORA_A;
+                    else if(src_token.token_string == "B")
+                        opcode = InstructionSet::ORA_B;
+                    else if(src_token.token_string == "C")
+                        opcode = InstructionSet::ORA_C;
+                    else if(src_token.token_string == "D")
+                        opcode = InstructionSet::ORA_D;
+                    else if(src_token.token_string == "E")
+                        opcode = InstructionSet::ORA_E;
+                    else if(src_token.token_string == "H")
+                        opcode = InstructionSet::ORA_H;
+                    else if(src_token.token_string == "L")
+                        opcode = InstructionSet::ORA_L;
+                    else
+                        opcode = InstructionSet::ORA_M;
+
+                    _program_instructions.push_back(opcode);
+                }
+                else if(tstring == "ORI")
+                {
+                    src_token = next_token();
+
+                    if(!parse_data_byte(src_token, operand_byte))
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::ORI);
+                    _program_instructions.push_back(operand_byte);
+                }
+                else if(tstring == "OUT")
+                {
+                    src_token = next_token();
+
+                    if(!parse_data_byte(src_token, operand_byte))
+                    {
+                        std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
+                            << src_token.line_number << ":" << src_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+                    _program_instructions.push_back(InstructionSet::OUT);
+                    _program_instructions.push_back(operand_byte);
+                }
+                else if(tstring == "PCHL")
+                {
+                    _program_instructions.push_back(InstructionSet::PCHL);
+                }
+                else if(tstring == "POP")
+                {
+                    dest_token = next_token();
+
+                    if(dest_token.tt != TokenType::REG)
+                    {
+                        std::cout << "Invalid operand \'" << dest_token.token_string << "\' at line "
+                            << dest_token.line_number << ":" << dest_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+
+                    uint8_t opcode;
+                    if(dest_token.token_string == "B")
+                        opcode = InstructionSet::POP_B;
+                    else if(dest_token.token_string == "D")
+                        opcode = InstructionSet::POP_D;
+                    else if(dest_token.token_string == "H")
+                        opcode = InstructionSet::POP_H;
+                    else
+                        opcode = InstructionSet::POP_PSW;
+
+                    _program_instructions.push_back(opcode);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "PUSH")
+                {
+                    dest_token = next_token();
+
+                    if(dest_token.tt != TokenType::REG)
+                    {
+                        std::cout << "Invalid operand \'" << dest_token.token_string << "\' at line "
+                            << dest_token.line_number << ":" << dest_token.col_number << "\n"
+                            << "Expected register as operand\n";
+                        return;
+                    }
+
+
+                    uint8_t opcode;
+                    if(dest_token.token_string == "B")
+                        opcode = InstructionSet::PUSH_B;
+                    else if(dest_token.token_string == "D")
+                        opcode = InstructionSet::PUSH_D;
+                    else if(dest_token.token_string == "H")
+                        opcode = InstructionSet::PUSH_H;
+                    else
+                        opcode = InstructionSet::PUSH_PSW;
+
+                    _program_instructions.push_back(opcode);
+                    _program_instructions.push_back((operand_word >> 4) << 4);
+                    _program_instructions.push_back((operand_word << 4) >> 4);
+                }
+                else if(tstring == "RAL")
+                {
+                    _program_instructions.push_back(InstructionSet::RAL);
+                }
+                else if(tstring == "RAR")
+                {
+                    _program_instructions.push_back(InstructionSet::RAR);
+                }
+                else if(tstring == "RC")
+                {
+                    _program_instructions.push_back(InstructionSet::RC);
+                }
+                else if(tstring == "RET")
+                {
+                    _program_instructions.push_back(InstructionSet::RET);
+                }
+                else if(tstring == "RIM")
+                {
+                    _program_instructions.push_back(InstructionSet::RIM);
+                }
+                else if(tstring == "RLC")
+                {
+                    _program_instructions.push_back(InstructionSet::RLC);
+                }
+                else if(tstring == "RM")
+                {
+                    _program_instructions.push_back(InstructionSet::RM);
+                }
+                else if(tstring == "RLC")
+                {
+                    _program_instructions.push_back(InstructionSet::RLC);
+                }
+                else if(tstring == "RNC")
+                {
+                    _program_instructions.push_back(InstructionSet::RNC);
+                }
+                else if(tstring == "RNZ")
+                {
+                    _program_instructions.push_back(InstructionSet::RNZ);
+                }
+                else if(tstring == "RP")
+                {
+                    _program_instructions.push_back(InstructionSet::RP);
+                }
+                else if(tstring == "RPE")
+                {
+                    _program_instructions.push_back(InstructionSet::RPE);
+                }
+                else if(tstring == "RPO")
+                {
+                    _program_instructions.push_back(InstructionSet::RPO);
+                }
+                else if(tstring == "RRC")
+                {
+                    _program_instructions.push_back(InstructionSet::RRC);
+                }
             }
 
             t = next_token();
