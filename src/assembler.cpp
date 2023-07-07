@@ -79,27 +79,59 @@ namespace lib8085
                 t.col_number = token_col_number;
                 _tokens.push_back(t);
 
+                _symbol_table.insert({ t.token_string, SymbolValue() });
+
                 t.token_string = "";
                 token_col_number = col_number;
+            }
+            // else if(c == '+' || c == '-' || c == '*' || c == '%')
+            // {
+            //     t.tt = TokenType::ARITHMETIC_OP;
+            //     t.line_number = line_number;
+            //     t.col_number = token_col_number;
+            //     _tokens.push_back(t);
 
-                // Todo: Store in symbol table
-             }
-             else if(c == ' ' || c == ',' || c == '\n' ||  c == '\t' || c == '\r' || c == ';')
-             {
-                 if(t.token_string.size() > 0)
-                 {
-                     if(is_opcode(t.token_string))
-                     {
-                         t.tt = TokenType::OPCODE;
+            //     t.token_string = "";
+            //     token_col_number = col_number;
+            // }
+            else if(c == ' ' || c == ',' || c == '\n' ||  c == '\t' || c == '\r' || c == ';')
+            {
+                if(t.token_string.size() > 0)
+                {
+                    const std::string token_string = t.token_string;
+
+                    if(is_opcode(token_string))
+                    {
+                        t.tt = TokenType::OPCODE;
                     }
-                    else if(is_reg(t.token_string))
+                    else if(is_reg(token_string))
                     {
                         t.tt = TokenType::REG;
-                        t.token_string[0] = std::toupper(t.token_string[0]);
+                        t.token_string[0] = std::toupper(token_string[0]);
                     }
-                    else if(is_directive(t.token_string))
+                    else if(is_directive(token_string))
                     {
                         t.tt = TokenType::NAME;
+                    }
+                    else if(is_hex_operand(token_string))
+                    {
+                        t.tt = TokenType::OPERAND_HEX;
+                    }
+                    else if(is_dec_operand(token_string))
+                    {
+                        t.tt = TokenType::OPERAND_DEC;
+                    }
+                    else if(is_oct_operand(token_string))
+                    {
+                        t.tt = TokenType::OPERAND_OCT;
+                    }
+                    else if(is_bin_operand(token_string))
+                    {
+                        t.tt = TokenType::OPERAND_BIN;
+                    }
+                    else if(is_location_counter_operand(token_string))
+                    {
+                        t.tt = TokenType::OPERAND_LOCATION_COUNTER;
                     }
                     else
                     {
@@ -165,6 +197,7 @@ namespace lib8085
         Token t = _tokens[0];
         std::string tstring;
         Token src_token;
+        Token dest_token;
         uint8_t operand_byte;
         uint16_t operand_word;
 
@@ -1286,8 +1319,25 @@ namespace lib8085
                     _program_instructions.push_back(InstructionSet::RRC);
                 }
             }
+            else if(t.tt == TokenType::LABEL)
+            {
+                // std::cout << "Label: \"" << t.token_string << "\" = " << _program_instructions.size() << std::endl;
+                SymbolValue& sv = (_symbol_table[t.token_string]);
+                sv.value = (uint16_t)_program_instructions.size();
+            }
 
             t = next_token();
+        }
+
+        // Update label references
+        for(auto& it: _symbol_table)
+        {
+            SymbolValue& sv = it.second;
+            for(auto& ref : it.second.references)
+            {
+                std::cout << "Replacing ref : \"" << ref << "\" = " << sv.value << std::endl;
+                _program_instructions[ref] = sv.value;
+            }
         }
 
     }
@@ -1326,12 +1376,139 @@ namespace lib8085
         return false;
     }
 
+    // TODO: If valid evaluate return value of actual string
+    // This will remove the need to run a simliar thing in parse_data_byte
+    bool Assembler::is_hex_operand(const std::string& str) const
+    {
+        char c;
+        if(std::tolower(str.back()) != 'h')
+        {
+            return false;
+        }
+
+        size_t len = str.size();
+
+        for(size_t i = 0; i < len-1; i ++)
+        {
+            c = std::tolower(str[i]);
+
+            if((c > '9' && c < 'a') || (c < '0' || c > 'f'))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // TODO: If valid evaluate return value of actual string
+    // This will remove the need to run a simliar thing in parse_data_byte
+    bool Assembler::is_dec_operand(const std::string& str) const
+    {
+        size_t len;
+
+        if(std::tolower(str.back()) == 'd')
+        {
+            len = str.size() - 1;
+        }
+        else
+        {
+            len = str.size();
+        }
+
+        char c;
+        for(size_t i = 0; i < len; i ++)
+        {
+            c = std::tolower(str[i]);
+
+            if(c > '9' || c < '0')
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // TODO: If valid evaluate return value of actual string
+    // This will remove the need to run a simliar thing in parse_data_byte
+    bool Assembler::is_oct_operand(const std::string& str) const
+    {
+        char c;
+        
+        c = std::tolower(str.back());
+        if(c != 'o' && c != 'q')
+        {
+            return false;
+        }
+
+        size_t len = str.size();
+
+        for(size_t i = 0; i < len-1; i ++)
+        {
+            c = std::tolower(str[i]);
+
+            if(c > '8' || c < '0')
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // TODO: If valid evaluate return value of actual string
+    // This will remove the need to run a simliar thing in parse_data_byte
+    bool Assembler::is_bin_operand(const std::string& str) const
+    {
+        char c;
+        
+        c = std::tolower(str.back());
+        if(c != 'b')
+        {
+            return false;
+        }
+
+        size_t len = str.size();
+
+        for(size_t i = 0; i < len-1; i ++)
+        {
+            c = std::tolower(str[i]);
+
+            if(c != '0' && c != '1')
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // TODO: If valid evaluate return value of actual string
+    // This will remove the need to run a simliar thing in parse_data_byte
+    bool Assembler::is_location_counter_operand(const std::string& str) const
+    {
+        char c;
+        
+        c = std::tolower(str.front());
+        if(c != '$')
+        {
+            return false;
+        }
+
+        // TODO: Validate str
+        // Format: $+66
+
+        return true;
+    }
+
+
     Token& Assembler::next_token()
     {
         Token& t = peek_token();
         _current_token++;
 
-        while(t.tt == TokenType::COMMENT);
+        while(t.tt == TokenType::COMMENT)
         {
             t = peek_token();
             _current_token ++;
@@ -1346,16 +1523,18 @@ namespace lib8085
             return _tokens[_tokens.size()];
         }
 
-        return _tokens[_current_token];
+        return _tokens[_current_token+1];
     }
 
     bool Assembler::parse_data_byte(const Token& t, uint8_t& operand_byte)
     {
         char c;
         const std::string& ts = t.token_string;
+
+        c = ts.back();
         // try parse hex data
         // Ends with 'H'
-        if(ts.back() == 'H' || ts.back() == 'h')
+        if(c == 'H' || c == 'h')
         {
             if(ts.size() > 3)
             {
@@ -1381,8 +1560,6 @@ namespace lib8085
                     return false;
                 }
 
-                std::cout << "C: "  << (int)c<< "\n";
-
                 operand_byte <<= 4;
                 operand_byte |= c;
 
@@ -1390,7 +1567,6 @@ namespace lib8085
         }
         else
         {
-            std::cout << "Invalid operand suffix\n";
             return false;
         }
         return true;
@@ -1400,6 +1576,7 @@ namespace lib8085
     {
         char c;
         const std::string& ts = t.token_string;
+
         // try parse hex data
         // Ends with 'H'
         if(ts.back() == 'H' || ts.back() == 'h')
@@ -1435,6 +1612,20 @@ namespace lib8085
         }
         else
         {
+            // Check if it's a label or expression
+            if(is_location_counter_operand(ts))
+            {
+                // TODO: Evaluate expression
+            }
+            else if(_symbol_table.find(ts) != _symbol_table.end())
+            {
+                SymbolValue& sv = (_symbol_table[t.token_string]);
+                sv.references.push_back(_program_instructions.size() + 1);
+
+                operand_word = 0;
+                return true;
+            }
+
             std::cout << "Invalid operand suffix\n";
             return false;
         }
