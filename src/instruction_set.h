@@ -253,5 +253,5 @@ namespace lib8085
 		XRA_M,
 		XRI,
 		XTHL
-};
+    };
 }
