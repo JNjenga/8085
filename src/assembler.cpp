@@ -1,6 +1,9 @@
 #include "assembler.h"
 #include "instruction_set.h"
+#include "assembler_util.h"
+
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <algorithm>
 #include <cctype>
@@ -26,6 +29,9 @@ namespace lib8085
 
     void Assembler::tokenize()
     {
+        std::cout << "--------------------------\n";
+        std::cout << "Tokenizing\n";
+        std::cout << "--------------------------\n";
         Token t;
         char c;
         bool is_comment = false;
@@ -189,6 +195,9 @@ namespace lib8085
 
     void Assembler::parse()
     {
+        std::cout << "--------------------------\n";
+        std::cout << "Parsing\n";
+        std::cout << "--------------------------\n";
         if(_tokens.size() == 0)
         {
             return;
@@ -750,7 +759,7 @@ namespace lib8085
 
                     if(parse_data_word(src_token, operand_word))
                     {
-                        std::cout << "Operand value: " << (int)operand_word << std::endl;;
+                        std::cout << "Operand value v: " << (int)operand_word << std::endl;;
                     }
                     else
                     {
@@ -1336,7 +1345,9 @@ namespace lib8085
             for(auto& ref : it.second.references)
             {
                 std::cout << "Replacing ref : \"" << ref << "\" = " << sv.value << std::endl;
-                _program_instructions[ref] = sv.value;
+                // NOTE: Big endian
+                _program_instructions[ref] = (sv.value & 0x00ff);
+                _program_instructions[ref+1] = (sv.value & 0xff00) >> 8;
             }
         }
 
@@ -1622,7 +1633,7 @@ namespace lib8085
                 SymbolValue& sv = (_symbol_table[t.token_string]);
                 sv.references.push_back(_program_instructions.size() + 1);
 
-                operand_word = 0;
+                operand_word = 0xffff;
                 return true;
             }
 
@@ -1632,4 +1643,64 @@ namespace lib8085
         return true;
     }
 
+    void Assembler::disassemble()
+    {
+        std::cout << "--------------------------\n";
+        std::cout << "Disassembling\n";
+        std::cout << "--------------------------\n";
+        std::unordered_map<lib8085::InstructionSet, OpcodeData> isa_opdata_map =
+            AssemblerUtil::get_instraction_data_map();
+
+        OpcodeData opcode_data;
+        uint8_t opcode;
+        uint8_t operand_byte;
+        uint16_t operand_word;
+        std::stringstream ss;
+
+
+        size_t len = _program_instructions.size();
+        for(size_t i = 0; i < len; i++)
+        {
+            opcode = _program_instructions[i];
+            std::unordered_map<lib8085::InstructionSet, OpcodeData>::const_iterator it
+                = isa_opdata_map.find(static_cast<InstructionSet>(opcode));
+
+            if(it == isa_opdata_map.end())
+            {
+                std::cerr << "Failed to disasseble opcode \"" << opcode << "\" at location " << i << "\n";
+                return;
+            }
+
+            opcode_data = it->second;
+
+            std::cout << "opcode: \""<< opcode_data.str << "\"";
+            if(opcode_data.operand_count == 1)
+            {
+                std::stringstream ss;
+                if(opcode_data.operand_size == 1)
+                {
+                    // TODO: Check for out of bounds ex
+                    i++;
+                    ss << std::hex << (int)_program_instructions[i];
+                }
+                else if(opcode_data.operand_size == 2)
+                {
+                    operand_word = 0;
+                    operand_word |= _program_instructions[i+2] << 8;
+                    operand_word |= _program_instructions[i+1];
+                    ss << std::hex << (int)operand_word;
+                    i+=2;
+                }
+                std::cout << ", operand: \"0x" << ss.str() << "\"";
+            }
+            std::cout << "\n";
+            
+        }
+    }
+
+    void Assembler::parse_auto()
+    {
+
+
+    }
 }

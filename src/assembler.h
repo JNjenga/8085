@@ -47,7 +47,9 @@ namespace lib8085
 
             void tokenize();
             void parse();
+            void parse_auto();
             void print_tokens();
+            void disassemble();
         private:
             std::string& _code;
             std::vector<std::string> _opcode_strs;
