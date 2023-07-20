@@ -1,3 +1,7 @@
+{insert name here}
+
+---
+
 ![UI view](docs/img/screenshot1.png)
 
 {insert name here} is a graphical intel 8085 emulator that I've been working on in my free time.
