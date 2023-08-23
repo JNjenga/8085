@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <map>
 
 namespace lib8085
 {
@@ -42,14 +43,19 @@ namespace lib8085
     class Assembler
     {
         public:
+            Assembler();
             Assembler(std::string& code);
             ~Assembler();
 
+            void assemble();
             void tokenize();
             void parse();
             void parse_auto();
             void print_tokens();
             void disassemble();
+
+            std::vector<std::string> _disassembly;
+            std::vector<uint8_t> _program_instructions;
         private:
             std::string& _code;
             std::vector<std::string> _opcode_strs;
@@ -58,7 +64,6 @@ namespace lib8085
             std::vector<Token> _tokens;
             size_t _current_token;
 
-            std::vector<uint8_t> _program_instructions;
             std::unordered_map<std::string, SymbolValue> _symbol_table;
 
             bool is_reg(const std::string& str) const;

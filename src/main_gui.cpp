@@ -5,25 +5,24 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <stdio.h>
+#include <fstream>
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
-// [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
-// To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
-// Your own project should not be affected, as you are likely to link with a newer binary of GLFW that is adequate for your version of Visual Studio.
+#include "app.h"
+
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
 // Forward declarations
-static void ShowMenuBar();
-static void ShowCodeViewer();
-static void ShowMemViewer();
-static void ShowDisassembley();
-static void ShowCPU();
+static std::string read_source_code(const char* path);
 
 // Globals
 static bool should_close = false;
+
+// App prooperties
+static appname8085::AppName appname;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -77,6 +76,8 @@ int main(int, char**)
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     //io.ConfigViewportsNoAutoMerge = true;
     //io.ConfigViewportsNoTaskBarIcon = true;
 
@@ -90,14 +91,43 @@ int main(int, char**)
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    bool close_cpu = false;
+    bool close_disassembley = false;
+    char* str0 = "0x00\0";
+    ImGuiTableFlags disassembley_flags = ImGuiTableFlags_Borders |  ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
+    static bool close_mem_viewer= false;
+    static char file_name[128] = "exampleasm/hello.asm";
+    lib8085::Processor* cpu = appname.get_cpu();
 
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar;
+    int reg_a = 0;
+    int reg_b = 0;
+    int reg_c = 0;
+    int reg_d = 0;
+    int reg_e = 0;
+    int reg_h = 0;
+    int reg_l = 0;
+
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking;
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     bool show_demo = true;
+    float x_offset = 0;
+    float y_offset = 0;
+    float size_of_menu_bar;
+    ImGuiID dockspace_id;
 
     // Main loop
     while (!glfwWindowShouldClose(window) && !should_close)
     {
+        reg_a = cpu->reg_a;
+        reg_b = cpu->reg_b;
+        reg_c = cpu->reg_c;
+        reg_d = cpu->reg_d;
+        reg_e = cpu->reg_e;
+        reg_h = cpu->reg_h;
+        reg_l = cpu->reg_l;
+
+        x_offset = 0;
+        y_offset = 0;
         glfwPollEvents();
 
         // Start the Dear ImGui frame
@@ -105,20 +135,195 @@ int main(int, char**)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
-
-
-        if(ImGui::Begin("Fullscreen app window", nullptr, flags))
+        if(ImGui::BeginMainMenuBar())
         {
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-            ShowMenuBar();
-            ShowCodeViewer();
-            ImGui::SameLine();
-            ShowCPU();
-            ShowMemViewer();
+            if(ImGui::BeginMenu("File"))
+            {
+                if(ImGui::MenuItem("Exit"))
+                {
+                    should_close = true;
+                }
+                ImGui::EndMenu();
+            }
+            x_offset += ImGui::GetWindowSize().x;
+            y_offset += ImGui::GetWindowSize().y;
+            size_of_menu_bar = ImGui::GetWindowSize().y;
+            ImGui::EndMainMenuBar();
         }
-        ImGui::End();
+
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, 0));
+
+        if(ImGui::Begin("ControlButtons", nullptr, ImGuiWindowFlags_NoDecoration))
+        {
+            ImGui::SetNextWindowSize(ImVec2(0, 40));
+            ImGui::InputText("file path", file_name, IM_ARRAYSIZE(file_name));
+
+            ImGui::SameLine();
+            if(ImGui::Button("Assemble"))
+            {
+                // Read file
+
+                std::string code = read_source_code(file_name);
+                std::cout << code << std::endl;
+                appname.assemble(code);
+            }
+
+            ImGui::SameLine();
+            if(ImGui::Button("Reset"))
+            {
+                appname.reset();
+            }
+
+            ImGui::SameLine();
+            ImGui::Button("Run");
+
+            ImGui::SameLine();
+            if(ImGui::Button("Step"))
+            {
+                appname.step();
+            }
+
+            ImGui::SameLine();
+            ImGui::Button("Pause");
+
+            x_offset += ImGui::GetWindowSize().x;
+            y_offset += ImGui::GetWindowSize().y;
+            ImGui::End();
+        }
+
+        ImGui::SetNextWindowPos(ImVec2(0, y_offset));
+        ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, viewport->WorkSize.y - y_offset + size_of_menu_bar));
+
+        if(ImGui::Begin("MainApp", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBringToFrontOnFocus))
+        {
+            dockspace_id = ImGui::GetID("MainApp");
+            ImGui::DockSpace(dockspace_id);
+
+            //
+            // Render CPU
+            // 
+
+            if(ImGui::Begin("Cpu", &close_cpu, ImGuiWindowFlags_NoCollapse))
+            {
+
+                ImGui::SeparatorText("Registers");
+
+                if(ImGui::InputInt("A: ", &reg_a, 1))
+                {
+                    cpu->reg_a = static_cast<uint8_t>(reg_a);
+                }
+
+                if(ImGui::InputInt("B: ", &reg_b, 1))
+                {
+                    cpu->reg_b = static_cast<uint8_t>(reg_b);
+                }
+
+                if(ImGui::InputInt("C: ", &reg_c, 1))
+                {
+                    cpu->reg_c = static_cast<uint8_t>(reg_c);
+                }
+
+                if(ImGui::InputInt("D: ", &reg_d, 1))
+                {
+                    cpu->reg_d = static_cast<uint8_t>(reg_d);
+                }
+
+                if(ImGui::InputInt("E: ", &reg_e, 1))
+                {
+                    cpu->reg_e = static_cast<uint8_t>(reg_e);
+                }
+
+                if(ImGui::InputInt("H: ", &reg_h, 1))
+                {
+                    cpu->reg_h = static_cast<uint8_t>(reg_h);
+                }
+
+                if(ImGui::InputInt("L: ", &reg_l, 1))
+                {
+                    cpu->reg_l = static_cast<uint8_t>(reg_l);
+                }
+
+                ImGui::InputInt("PSW: ", (int*)&cpu->reg_c, 1);
+                ImGui::InputInt("PC: ",  (int*)&cpu->program_counter, 1);
+                ImGui::InputInt("SP: ",  (int*)&cpu->stack_pointer, 1);
+
+                ImGui::End();
+            }
+
+            if(ImGui::Begin("Disassembley", &close_disassembley, ImGuiWindowFlags_NoCollapse))
+            {
+                if(ImGui::BeginTable("DisasmCode", 1, disassembley_flags, ImVec2(0.0f, 0.0f)))
+                {
+                    ImGui::TableSetupScrollFreeze(0, 1);
+                    // ImGui::TableSetupColumn("Address", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Instruction", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableHeadersRow();
+
+                    for(auto& it: appname.get_disassembly())
+                    {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::Text(it.c_str());
+                    }
+                    ImGui::EndTable();
+                }
+
+                ImGui::End();
+            }
+
+            if(ImGui::Begin("MemViewer", &close_mem_viewer, ImGuiWindowFlags_NoCollapse))
+            {
+                size_t mem_index = 0;
+                size_t cols = 0x10;
+                ImGuiTableFlags flags = ImGuiTableFlags_Borders |  ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
+                std::string hexval;
+
+                if(ImGui::BeginTable("MemViewerTable", cols*2+1, flags, ImVec2(0.0f, 0.0f)))
+                {
+                    ImGui::TableSetupScrollFreeze(0, 1);
+                    ImGui::TableSetupColumn("Address",ImGuiTableColumnFlags_WidthFixed);
+                    std::stringstream ss;
+                    for(int j = 0; j < cols; j ++)
+                    {
+                        ss.str("");
+                        ss << std::hex << j;
+                        ImGui::TableSetupColumn(ss.str().c_str());
+                    }
+                    ImGui::TableHeadersRow();
+                    size_t mem_size = 1 << 5;
+                    for(int i = 0; i < mem_size; i += 0x10)
+                    {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::Text("0x%04X", i);
+                        std::string ascii_string;
+                        uint8_t val;
+                        for(int j = 0; j < cols; j ++)
+                        {
+                            val = cpu->mem[mem_index++];
+                            if(std::isprint(val))
+                                ascii_string += val;
+                            else
+                                ascii_string += '.';
+
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%02X", val);
+                        }
+                        for(auto & c : ascii_string)
+                        {
+                            std::string cval(1, c);
+                            ImGui::TableNextColumn();
+                            ImGui::Text(cval.c_str());
+                        }
+                    }
+                    ImGui::EndTable();
+                }
+                ImGui::End();
+            }
+
+            ImGui::End();
+        }
 
         // Rendering
         ImGui::Render();
@@ -126,6 +331,17 @@ int main(int, char**)
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // Update and Render additional Platform Windows
+        // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+        //  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            GLFWwindow* backup_current_context = glfwGetCurrentContext();
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+            glfwMakeContextCurrent(backup_current_context);
+        }
 
         glfwSwapBuffers(window);
     }
@@ -141,183 +357,30 @@ int main(int, char**)
     return 0;
 }
 
-static void ShowMenuBar()
+std::string read_source_code(const char* path)
 {
-    if(ImGui::BeginMainMenuBar())
+    std::ifstream file(path);
+    std::string line;
+    std::string code = "";
+
+    if(!file.bad())
     {
-        if(ImGui::BeginMenu("File"))
+        while(std::getline(file, line))
         {
-            if(ImGui::MenuItem("Exit"))
-            {
-                should_close = true;
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
-}
-static void ShowDisassembley()
-{
-    if(ImGui::BeginChild("Disassebley", ImVec2(ImGui::GetContentRegionAvail().x * 0.495, ImGui::GetContentRegionAvail().y * 0.7), ImGuiWindowFlags_None))
-    {
-        ImGui::SeparatorText("Disasm Viewer");
-        ImGuiTableFlags flags = ImGuiTableFlags_Borders |  ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
-        if(ImGui::BeginTable("DisasmCode", 3, flags, ImVec2(0.0f, 0.0f)))
-        {
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("Address", ImGuiTableColumnFlags_WidthFixed);
-            ImGui::TableSetupColumn("Opcode", ImGuiTableColumnFlags_WidthFixed);
-            ImGui::TableSetupColumn("Operand", ImGuiTableColumnFlags_WidthFixed);
-            ImGui::TableHeadersRow();
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Text("0x600");
-            ImGui::TableNextColumn();
-            ImGui::Text("JMP");
-            ImGui::TableNextColumn();
-            ImGui::Text("0x5000");
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Text("0x600");
-            ImGui::TableNextColumn();
-            ImGui::Text("ADD A");
-            ImGui::TableNextColumn();
-            ImGui::Text("-");
-
-            ImGui::EndTable();
+            code += line + "\n";
         }
 
-        ImGui::EndChild();
+        code += "\n";
     }
-}
-
-static void ShowCodeViewer()
-{
-    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
-    if(ImGui::BeginChild("Tabs", ImVec2(ImGui::GetContentRegionAvail().x * 0.4, ImGui::GetContentRegionAvail().y * 0.7), ImGuiWindowFlags_None))
+    else
     {
-        ImGui::SeparatorText("Code Editor");
-        if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
-        {
-            if (ImGui::BeginTabItem("asm.txt"))
-            {
-                static char text[1024 * 16] =
-                    "/*\n"
-                    " The Pentium F00F bug, shorthand for F0 0F C7 C8,\n"
-                    " the hexadecimal encoding of one offending instruction,\n"
-                    " more formally, the invalid operand with locked CMPXCHG8B\n"
-                    " instruction bug, is a design flaw in the majority of\n"
-                    " Intel Pentium, Pentium MMX, and Pentium OverDrive\n"
-                    " processors (all in the P5 microarchitecture).\n"
-                    "*/\n\n"
-                    "label:\n"
-                    "\tlock cmpxchg8b eax\n";
-
-
-                ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_AllowTabInput;
-                ImGui::InputTextMultiline("##source", text, IM_ARRAYSIZE(text), ImVec2(-FLT_MIN, ImGui::GetContentRegionAvail().y), input_flags);
-                ImGui::EndTabItem();
-            }
-            ImGui::EndTabBar();
-        }
-        ImGui::EndChild();
-        ImGui::SameLine();
-        ShowDisassembley();
+        std::cout << "Couldn't read file\n";
     }
-}
+    std::cout << "Read code:\n";
+    std::cout << code ;
+    std::cout << "==================\n";
 
-static void ShowMemViewer()
-{
-    static uint8_t mem[1 << 16] = {0};
-    if(ImGui::BeginChild("Mem editor", ImVec2(ImGui::GetContentRegionAvail().x * 0.7, ImGui::GetContentRegionAvail().y)))
-    {
-        ImGui::SeparatorText("Mem Editor");
-        size_t mem_index = 0;
-        size_t cols = 0x10;
-        ImGuiTableFlags flags = ImGuiTableFlags_Borders |  ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
-        std::string hexval;
+    file.close();
 
-        if(ImGui::BeginTable("MemViewer", cols*2+1, flags, ImVec2(0.0f, 0.0f)))
-        {
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("Address",ImGuiTableColumnFlags_WidthFixed);
-            std::stringstream ss;
-            for(int j = 0; j < cols; j ++)
-            {
-                ss.str("");
-                ss << std::hex << j;
-                ImGui::TableSetupColumn(ss.str().c_str());
-            }
-            ImGui::TableHeadersRow();
-            size_t mem_size = 1 << 16;
-            for(int i = 0; i < mem_size; i += 0x10)
-            {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("0x%04X", i);
-                std::string ascii_string;
-                uint8_t val;
-                for(int j = 0; j < cols; j ++)
-                {
-                    val = mem[mem_index++];
-                    if(std::isprint(val))
-                        ascii_string += val;
-                    else
-                        ascii_string += '.';
-
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%02X", val);
-                }
-                for(auto & c : ascii_string)
-                {
-                    std::string cval(1, c);
-                    ImGui::TableNextColumn();
-                    ImGui::Text(cval.c_str());
-                }
-            }
-            ImGui::EndTable();
-        }
-        ImGui::EndChild();
-    }
-}
-
-static void ShowCPU()
-{
-    char* str0 = "0x00\0";
-
-    if(ImGui::BeginChild("CPU", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.7), ImGuiWindowFlags_None))
-    {
-        ImGui::SeparatorText("CPU");
-
-        ImGui::SeparatorText("Registers");
-
-        ImGui::InputText("A: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("B: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("C: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("D: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("E: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("F: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("H: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("L: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("PSW: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("PC: ", str0, IM_ARRAYSIZE(str0));
-        ImGui::InputText("SP: ", str0, IM_ARRAYSIZE(str0));
-
-        ImGui::Separator();
-        ImGui::Button("Assemble");
-        ImGui::SameLine();
-        ImGui::Button("Reset");
-        ImGui::SameLine();
-        ImGui::Button("Run");
-        ImGui::SameLine();
-        ImGui::Button("Step");
-        ImGui::SameLine();
-        ImGui::Button("Pause");
-
-
-        ImGui::EndChild();
-    }
-    
+    return code;
 }

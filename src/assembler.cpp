@@ -10,6 +10,10 @@
 
 namespace lib8085
 {
+    Assembler::Assembler() : Assembler(std::string())
+    {
+    }
+
     Assembler::Assembler(std::string& code) : _code(code), _current_token(0)
     {
         _opcode_strs = { "ACI" , "ADC" , "ADD" , "ADI" , "ANA" , "ANI" , "CALL" , "CC" , "CM," , "CMA" , "CMC" , "CMP" , "CNC" , "CNZ" , "CP," , "CPE" , "CPI" , "CPO" , "CZ," , "DAA" , "DAD" , "DCR" , "DCX" , "DI," , "EI," , "HLT" , "IN," , "INR" , "INX" , "JC," , "JM," , "JMP" , "JNC" , "JNZ" , "JP," , "JPE" , "JPO" , "JZ," , "LDA" , "LDAX" , "LHLD" , "LXI" , "MOV" , "MVI" , "NOP" , "ORA" , "ORI" , "OUT" , "PCHL" , "POP" , "PUSH" , "RAL" , "RAR" , "RC," , "RET" , "RIM" , "RLC" , "RM," , "RNC" , "RNZ" , "RP," , "RPE" , "RPO" , "RRC" , "RST_0" , "RST_1" , "RST_2" , "RST_3" , "RST_4" , "RST_5" , "RST_6" , "RST_7" , "RZ" , "SBB" , "SBI" , "SHLD" , "SIM" , "SPH" , "STA" , "STAX" , "STC" , "SUB" , "SUI" , "XCHG" , "XRA" , "XRI" , "XTHL" };
@@ -17,6 +21,13 @@ namespace lib8085
         // TODO: Initialize _directive_strs
     }
 
+    void Assembler::assemble()
+    {
+        tokenize();
+        parse();
+        disassemble();
+    }
+    
     Assembler::~Assembler(){}
 
     void Assembler::print_tokens()
@@ -32,6 +43,7 @@ namespace lib8085
         std::cout << "--------------------------\n";
         std::cout << "Tokenizing\n";
         std::cout << "--------------------------\n";
+        std::cout << _code;
         Token t;
         char c;
         bool is_comment = false;
@@ -39,6 +51,10 @@ namespace lib8085
         int line_number = 1;
         int col_number = 0;
         int token_col_number = 0;
+
+        _symbol_table = std::unordered_map<std::string, lib8085::SymbolValue>();
+        _tokens = std::vector<Token>();
+
 
         for(size_t i = 0; i < _code.size(); i ++)
         {
@@ -195,6 +211,8 @@ namespace lib8085
 
     void Assembler::parse()
     {
+        _program_instructions = std::vector<uint8_t>();
+
         std::cout << "--------------------------\n";
         std::cout << "Parsing\n";
         std::cout << "--------------------------\n";
@@ -213,6 +231,7 @@ namespace lib8085
         while(t.tt != TokenType::_EOF)
         {
             tstring = t.token_string;
+            std::cout << tstring << std::endl;
             if(t.tt == TokenType::OPCODE)
             {
                 if(tstring == "ACI")
@@ -1651,6 +1670,8 @@ namespace lib8085
         std::unordered_map<lib8085::InstructionSet, OpcodeData> isa_opdata_map =
             AssemblerUtil::get_instraction_data_map();
 
+        _disassembly = std::vector<std::string>();
+
         OpcodeData opcode_data;
         uint8_t opcode;
         uint8_t operand_byte;
@@ -1661,6 +1682,7 @@ namespace lib8085
         size_t len = _program_instructions.size();
         for(size_t i = 0; i < len; i++)
         {
+            std::stringstream ss;
             opcode = _program_instructions[i];
             std::unordered_map<lib8085::InstructionSet, OpcodeData>::const_iterator it
                 = isa_opdata_map.find(static_cast<InstructionSet>(opcode));
@@ -1673,10 +1695,11 @@ namespace lib8085
 
             opcode_data = it->second;
 
+            ss << opcode_data.str << " ";
+
             std::cout << "opcode: \""<< opcode_data.str << "\"";
             if(opcode_data.operand_count == 1)
             {
-                std::stringstream ss;
                 if(opcode_data.operand_size == 1)
                 {
                     // TODO: Check for out of bounds ex
@@ -1694,8 +1717,10 @@ namespace lib8085
                 std::cout << ", operand: \"0x" << ss.str() << "\"";
             }
             std::cout << "\n";
+            _disassembly.push_back(ss.str());
             
         }
+        std::cout << "--------------------------\n";
     }
 
     void Assembler::parse_auto()
