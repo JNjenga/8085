@@ -1667,10 +1667,11 @@ namespace lib8085
         std::cout << "--------------------------\n";
         std::cout << "Disassembling\n";
         std::cout << "--------------------------\n";
-        std::unordered_map<lib8085::InstructionSet, OpcodeData> isa_opdata_map =
-            AssemblerUtil::get_instraction_data_map();
 
-        _disassembly = std::vector<std::string>();
+        std::unordered_map<lib8085::InstructionSet, OpcodeData>
+            isa_opdata_map = AssemblerUtil::get_instraction_data_map();
+
+        _disassembly = std::map<uint64_t, std::string>();
 
         OpcodeData opcode_data;
         uint8_t opcode;
@@ -1678,10 +1679,11 @@ namespace lib8085
         uint16_t operand_word;
         std::stringstream ss;
 
-
         size_t len = _program_instructions.size();
+        size_t instruction_address;
         for(size_t i = 0; i < len; i++)
         {
+            instruction_address = i;
             std::stringstream ss;
             opcode = _program_instructions[i];
             std::unordered_map<lib8085::InstructionSet, OpcodeData>::const_iterator it
@@ -1717,7 +1719,7 @@ namespace lib8085
                 std::cout << ", operand: \"0x" << ss.str() << "\"";
             }
             std::cout << "\n";
-            _disassembly.push_back(ss.str());
+            _disassembly.insert({ instruction_address, ss.str() });
             
         }
         std::cout << "--------------------------\n";

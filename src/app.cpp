@@ -31,7 +31,7 @@ bool appname8085::AppName::pause()
     return true;
 }
 
-const std::vector<std::string>& appname8085::AppName::get_disassembly()
+const std::map<uint64_t, std::string>& appname8085::AppName::get_disassembly()
 {
     return _assembler._disassembly;
 }

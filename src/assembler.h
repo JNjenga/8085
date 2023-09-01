@@ -54,7 +54,7 @@ namespace lib8085
             void print_tokens();
             void disassemble();
 
-            std::vector<std::string> _disassembly;
+            std::map<uint64_t, std::string> _disassembly;
             std::vector<uint8_t> _program_instructions;
         private:
             std::string& _code;

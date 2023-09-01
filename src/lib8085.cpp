@@ -31,10 +31,10 @@ namespace lib8085
         stack_pointer   = 0;
         program_counter = 0;
 
-        for(int i = 0; i < (1 << 16); i ++)
-        {
-            mem[i] = 0;
-        }
+        // for(int i = 0; i < (1 << 16); i ++)
+        // {
+        //     mem[i] = 0;
+        // }
 
         sign   = false;
         zero   = false;
@@ -59,7 +59,9 @@ namespace lib8085
 
     uint16_t Processor::get_imm_16()
     {
-        return get_word(mem[program_counter++], mem[program_counter++]);
+        uint8_t b = mem[program_counter++];
+        uint8_t a = mem[program_counter++];
+        return get_word(a, b);
     }
 
     void Processor::push_stack(uint8_t val)

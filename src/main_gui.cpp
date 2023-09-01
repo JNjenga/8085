@@ -253,18 +253,55 @@ int main(int, char**)
 
             if(ImGui::Begin("Disassembley", &close_disassembley, ImGuiWindowFlags_NoCollapse))
             {
-                if(ImGui::BeginTable("DisasmCode", 1, disassembley_flags, ImVec2(0.0f, 0.0f)))
+                const int number_of_cols = 2;
+                if(ImGui::BeginTable("DisasmCode", number_of_cols, disassembley_flags, ImVec2(0.0f, 0.0f)))
                 {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     // ImGui::TableSetupColumn("Address", ImGuiTableColumnFlags_WidthFixed);
-                    ImGui::TableSetupColumn("Instruction", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Address");
+                    ImGui::TableSetupColumn("Instruction");
                     ImGui::TableHeadersRow();
 
-                    for(auto& it: appname.get_disassembly())
+                    uint64_t address;
+
+                    std::map<uint64_t, std::string> disassembly = appname.get_disassembly();
+
+                    auto loc = disassembly.find(cpu->program_counter);
+
+                    int start = std::distance(disassembly.begin(), loc);
+
+                    if(start < 10)
+                        start = 0;
+                    else
+                        start -= 10;
+
+                    int end = start + 15;
+
+                    if(end > disassembly.size())
+                        end = disassembly.size();
+
+                    std::map<uint64_t, std::string>::iterator it_start = disassembly.begin();
+                    std::map<uint64_t, std::string>::iterator it_end   = disassembly.begin();
+
+                    std::advance(it_start, start);
+                    std::advance(it_end, end);
+
+                    for(; it_start != it_end; it_start++)
                     {
                         ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::Text(it.c_str());
+
+                        // Set background color
+                        address = it_start->first;
+
+                        if(address == cpu->program_counter)
+                        {
+                            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImVec4(0.7f, 0.3f, 0.3f, 1.00f)));
+                        }
+
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::Text("0x%04X", address);
+                        ImGui::TableSetColumnIndex(1);
+                        ImGui::Text(it_start->second.c_str());
                     }
                     ImGui::EndTable();
                 }

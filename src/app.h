@@ -13,7 +13,7 @@ namespace appname8085
             bool pause();
             bool reset();
 
-            const std::vector<std::string>& get_disassembly();
+            const std::map<uint64_t, std::string>& get_disassembly();
             lib8085::Processor* get_cpu();
 
             ~AppName();
