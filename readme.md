@@ -1,5 +1,4 @@
 Retro85
-
 ---
 
 ![UI view](docs/img/screenshot1.png)
