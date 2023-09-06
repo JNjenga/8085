@@ -327,10 +327,10 @@ int main(int, char**)
             {
                 size_t mem_index = 0;
                 size_t cols = 0x10;
-                ImGuiTableFlags flags = ImGuiTableFlags_Borders |  ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
+                ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter;
                 std::string hexval;
 
-                if(ImGui::BeginTable("MemViewerTable", cols*2+1, flags, ImVec2(0.0f, 0.0f)))
+                if(ImGui::BeginTable("MemViewerTable", cols + 4, flags, ImVec2(0.0f, 0.0f)))
                 {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("Address",ImGuiTableColumnFlags_WidthFixed);
@@ -342,30 +342,42 @@ int main(int, char**)
                         ImGui::TableSetupColumn(ss.str().c_str());
                     }
                     ImGui::TableHeadersRow();
-                    size_t mem_size = 1 << 5;
-                    for(int i = 0; i < mem_size; i += 0x10)
+                    size_t mem_size = 1 << 16;
+                    ImGuiListClipper clipper;
+                    clipper.Begin(mem_size / 0x10);
+                    while (clipper.Step())
                     {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::Text("0x%04X", i);
-                        std::string ascii_string;
-                        uint8_t val;
-                        for(int j = 0; j < cols; j ++)
+                        for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
                         {
-                            val = cpu->mem[mem_index++];
-                            if(std::isprint(val))
-                                ascii_string += val;
-                            else
-                                ascii_string += '.';
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                            ImGui::Text("0x%04X", row * 0x10);
+                            std::string ascii_string;
+                            uint8_t val;
+                            for(int j = 0; j < cols; j ++)
+                            {
+                                val = cpu->mem[mem_index++];
+
+                                if(std::isprint(val))
+                                    ascii_string += val;
+                                else
+                                    ascii_string += '.';
+
+                                ImGui::TableNextColumn();
+                                if(val == 0)
+                                {
+                                    ImGui::TextDisabled("00");
+                                }
+                                else
+                                {
+                                    ImGui::Text("%02X", val);
+                                }
+                            }
 
                             ImGui::TableNextColumn();
-                            ImGui::Text("%02X", val);
-                        }
-                        for(auto & c : ascii_string)
-                        {
-                            std::string cval(1, c);
+                            ImGui::Text("");
                             ImGui::TableNextColumn();
-                            ImGui::Text(cval.c_str());
+                            ImGui::Text(ascii_string.c_str());
                         }
                     }
                     ImGui::EndTable();
