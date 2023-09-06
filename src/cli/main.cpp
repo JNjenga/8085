@@ -5,7 +5,9 @@
 
 void write_file(const char* path, char* data, size_t len)
 {
-    std::ofstream file(path);
+    std::cout << "Writing file: \'" << path << "\' " << "\n";
+    std::cout << "Data size: " << len << "\n";
+    std::ofstream file(path, std::ios::out | std::ios::binary);
 
     if(file.good() && file.is_open())
     {
@@ -68,35 +70,33 @@ void print_help()
 
 int main(int argc, char* argv[])
 {
-    char* command = nullptr;
-    while((command = *(++argv)))
+    while(*(++argv) != nullptr)
     {
-        if(std::string(command) == "-a")
+        if(std::string(*argv) == "-a")
         {
-            while((command = *(++argv)))
+            // Compile all paths
+            while(*(++argv) != nullptr)
             {
-                std::cout << "Assembling file:\'" << command << "\'...";
+                std::cout << "Assembling file:\'" << *argv << "\'\n";
 
-                std::vector<uint8_t> file_bin = read_file(command);
+                std::vector<uint8_t> file_bin = read_file(*argv);
                 std::string code(file_bin.begin(), file_bin.end());
                 std::vector<uint8_t> machine_code = assemble(code);
 
-                std::cout << "Done\n";
+                std::cout << "Writing to file:\'" << *argv << ".retro85\'...";
+                std::string output_path = std::string(*argv) + ".retro85";
 
-                std::cout << "Writing to file:\'" << command << ".retro85\'...";
-                std::string output_path = std::string(command) + ".retro85";
                 write_file(output_path.c_str(), reinterpret_cast<char*>(machine_code.data()), machine_code.size() * sizeof(uint8_t));
-                std::cout << "Done\n";
             }
             break;
         }
-        else if(std::string(command) == "-d")
+        else if(std::string(*argv) == "-d")
         {
-            while((command = *(++argv)))
+            while(*(++argv))
             {
-                std::cout << "Disassembling file:\'" << command << "\'...";
+                std::cout << "Disassembling file:\'" << *argv << "\'...\n";
 
-                std::vector<uint8_t> file_bin = read_file(command);
+                std::vector<uint8_t> file_bin = read_file(*argv);
                 std::map<uint64_t, std::string> disasm = disassemble(file_bin);
 
                 std::cout << "Done\n";
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            std::cout << "Unknown command \'" << command << (command == "-a" ? "yes" : "no") << "\'\n";
+            std::cout << "Unknown command \'" << *argv << (*argv == "-a" ? "yes" : "no") << "\'\n";
             print_help();
             return -1;
         }
