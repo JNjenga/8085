@@ -1,5 +1,5 @@
-#include "lib8085.h"
-#include "assembler.h"
+#include "../lib8085.h"
+#include "../assembler.h"
 
 namespace appname8085
 {
