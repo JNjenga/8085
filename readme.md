@@ -1,8 +1,7 @@
-Retro85
----
-
 ![UI view](docs/img/screenshot1.png)
 
+Retro85
+---
 
 Retro85, as the name suggests, is an [Intel 8085](https://en.wikipedia.org/wiki/Intel_8085) cpu emulator and simulator written in C++.
 It features a very intuitive and easy to use graphical application, a built-in debugger, ~assembly code editor~ and many other features.
