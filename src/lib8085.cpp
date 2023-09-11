@@ -1531,6 +1531,24 @@ namespace lib8085
         {
             reg_a += addend;
         }
+
+        if(reg_a & 0xf0)
+        {
+            sign = true;
+        }
+        else
+        {
+            sign = false;
+        }
+
+        if(reg_a == 0)
+        {
+            zero = true;
+        }
+        else
+        {
+            zero = false;
+        }
     }
 
     void Processor::sub(uint8_t subtrahend, bool with_carry)

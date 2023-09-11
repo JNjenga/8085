@@ -14,7 +14,7 @@ namespace lib8085
 		uint8_t* mem;
 
 		// Flags
-		bool sign;
+		bool sign; // Set on if 7th bit of acc is on, otherwise off
 		bool zero;
 		bool parity;
 		bool carry;
