@@ -31,10 +31,10 @@ namespace lib8085
         stack_pointer   = 0;
         program_counter = 0;
 
-        // for(int i = 0; i < (1 << 16); i ++)
-        // {
-        //     mem[i] = 0;
-        // }
+        for(int i = 0; i < (1 << 16); i ++)
+        {
+            mem[i] = 0;
+        }
 
         sign   = false;
         zero   = false;
