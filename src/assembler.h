@@ -50,7 +50,7 @@ namespace lib8085
             Assembler(std::string& code);
             ~Assembler();
 
-            void assemble();
+            std::vector<uint8_t> assemble();
             void tokenize();
             bool parse();
             void print_tokens();

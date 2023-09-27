@@ -45,9 +45,7 @@ std::vector<uint8_t> read_file(const char* path)
 std::vector<uint8_t> assemble(std::string& code)
 {
     lib8085::Assembler assembler(code);
-    assembler.assemble();
-
-    return assembler._program_instructions;
+    return assembler.assemble();
 }
 
 std::map<uint64_t, std::string> disassemble(std::vector<uint8_t> instructions)

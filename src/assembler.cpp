@@ -17,11 +17,9 @@ namespace lib8085
     Assembler::Assembler(std::string& code) : _code(code), m_tokens(nullptr)
     {
         _opcode_strs = { "ACI" , "ADC" , "ADD" , "ADI" , "ANA" , "ANI" , "CALL" , "CC" , "CM," , "CMA" , "CMC" , "CMP" , "CNC" , "CNZ" , "CP," , "CPE" , "CPI" , "CPO" , "CZ," , "DAA" , "DAD" , "DCR" , "DCX" , "DI," , "EI," , "HLT" , "IN," , "INR" , "INX" , "JC," , "JM," , "JMP" , "JNC" , "JNZ" , "JP," , "JPE" , "JPO" , "JZ," , "LDA" , "LDAX" , "LHLD" , "LXI" , "MOV" , "MVI" , "NOP" , "ORA" , "ORI" , "OUT" , "PCHL" , "POP" , "PUSH" , "RAL" , "RAR" , "RC," , "RET" , "RIM" , "RLC" , "RM," , "RNC" , "RNZ" , "RP," , "RPE" , "RPO" , "RRC" , "RST_0" , "RST_1" , "RST_2" , "RST_3" , "RST_4" , "RST_5" , "RST_6" , "RST_7" , "RZ" , "SBB" , "SBI" , "SHLD" , "SIM" , "SPH" , "STA" , "STAX" , "STC" , "SUB" , "SUI" , "XCHG" , "XRA" , "XRI" , "XTHL" };
-        // TODO: Initialize _opcode_strs
-        // TODO: Initialize _directive_strs
     }
 
-    void Assembler::assemble()
+    std::vector<uint8_t> Assembler::assemble()
     {
         tokenize();
 
@@ -31,9 +29,28 @@ namespace lib8085
         };
 
         disassemble();
+
+        return _program_instructions;
     }
     
-    Assembler::~Assembler(){}
+    Assembler::~Assembler()
+    {
+        Token* t = m_tokens;
+        Token* tmp_ptr;
+
+        // Start from head
+        while(t)
+        {
+            t = t->prev;
+        }
+
+        while(t)
+        {
+            tmp_ptr = t->next;
+            delete t;
+            t = tmp_ptr;
+        }
+    }
 
     void Assembler::print_tokens()
     {
