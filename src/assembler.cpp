@@ -496,12 +496,8 @@ namespace lib8085
         return true;
     }
 
-    void Assembler::disassemble()
+    bool Assembler::disassemble()
     {
-        std::cout << "--------------------------\n";
-        std::cout << "Disassembling\n";
-        std::cout << "--------------------------\n";
-
         std::unordered_map<lib8085::InstructionSet, OpcodeData>
             isa_opdata_map = AssemblerUtil::get_instraction_data_map();
 
@@ -526,7 +522,7 @@ namespace lib8085
             if(it == isa_opdata_map.end())
             {
                 std::cerr << "Failed to disasseble opcode \"" << opcode << "\" at location " << i << "\n";
-                return;
+                return false;
             }
 
             opcode_data = it->second;
@@ -551,8 +547,9 @@ namespace lib8085
                 }
             }
             _disassembly.insert({ instruction_address, ss.str() });
-            
         }
+
+        return true;
     }
 
     bool Assembler::parse()
@@ -569,7 +566,6 @@ namespace lib8085
         std::string tstring;
         std::string opcode_str;
         Token* src_token;
-        Token dest_token;
         uint8_t operand_byte;
         uint16_t operand_word;
 

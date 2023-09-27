@@ -54,7 +54,7 @@ namespace lib8085
             void tokenize();
             bool parse();
             void print_tokens();
-            void disassemble();
+            bool disassemble();
 
             std::map<uint64_t, std::string> _disassembly;
             std::vector<uint8_t> _program_instructions;
