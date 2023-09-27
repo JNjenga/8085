@@ -80,13 +80,27 @@ int main(int argc, char* argv[])
                 std::cout << "Assembling file:\'" << *argv << "\'\n";
 
                 std::vector<uint8_t> file_bin = read_file(*argv);
+
+                if(file_bin.size() == 0)
+                {
+                    std::cout << "File empty, exiting\n";
+                    return -1;
+                }
+
                 std::string code(file_bin.begin(), file_bin.end());
                 std::vector<uint8_t> machine_code = assemble(code);
 
-                std::cout << "Writing to file:\'" << *argv << ".retro85\'...";
-                std::string output_path = std::string(*argv) + ".retro85";
+                if(machine_code.size() > 0)
+                {
+                    std::cout << "Writing to file:\'" << *argv << ".retro85\'...";
+                    std::string output_path = std::string(*argv) + ".retro85";
 
-                write_file(output_path.c_str(), reinterpret_cast<char*>(machine_code.data()), machine_code.size() * sizeof(uint8_t));
+                    write_file(output_path.c_str(), reinterpret_cast<char*>(machine_code.data()), machine_code.size() * sizeof(uint8_t));
+                }
+                else
+                {
+                    std::cout << "Some error occured while assembling\n";
+                }
             }
             break;
         }

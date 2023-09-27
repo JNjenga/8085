@@ -49,8 +49,7 @@ namespace lib8085
 
             void assemble();
             void tokenize();
-            void parse();
-            void parse_auto();
+            bool parse();
             void print_tokens();
             void disassemble();
 
