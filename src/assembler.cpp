@@ -14,7 +14,7 @@ namespace lib8085
     {
     }
 
-    Assembler::Assembler(std::string& code) : _code(code), _current_token(0)
+    Assembler::Assembler(std::string& code) : _code(code), m_tokens(nullptr)
     {
         _opcode_strs = { "ACI" , "ADC" , "ADD" , "ADI" , "ANA" , "ANI" , "CALL" , "CC" , "CM," , "CMA" , "CMC" , "CMP" , "CNC" , "CNZ" , "CP," , "CPE" , "CPI" , "CPO" , "CZ," , "DAA" , "DAD" , "DCR" , "DCX" , "DI," , "EI," , "HLT" , "IN," , "INR" , "INX" , "JC," , "JM," , "JMP" , "JNC" , "JNZ" , "JP," , "JPE" , "JPO" , "JZ," , "LDA" , "LDAX" , "LHLD" , "LXI" , "MOV" , "MVI" , "NOP" , "ORA" , "ORI" , "OUT" , "PCHL" , "POP" , "PUSH" , "RAL" , "RAR" , "RC," , "RET" , "RIM" , "RLC" , "RM," , "RNC" , "RNZ" , "RP," , "RPE" , "RPO" , "RRC" , "RST_0" , "RST_1" , "RST_2" , "RST_3" , "RST_4" , "RST_5" , "RST_6" , "RST_7" , "RZ" , "SBB" , "SBI" , "SHLD" , "SIM" , "SPH" , "STA" , "STAX" , "STC" , "SUB" , "SUI" , "XCHG" , "XRA" , "XRI" , "XTHL" };
         // TODO: Initialize _opcode_strs
@@ -24,7 +24,12 @@ namespace lib8085
     void Assembler::assemble()
     {
         tokenize();
-        parse();
+
+        if(!parse())
+        {
+            std::cout << "Parsing was not successful\n";
+        };
+
         disassemble();
     }
     
@@ -32,19 +37,17 @@ namespace lib8085
 
     void Assembler::print_tokens()
     {
-        for(auto& t : _tokens)
+        Token* tptr = m_tokens;
+        while(tptr != nullptr)
         {
-            std::cout << "tt: " << t.tt << ", str: " << t.token_string << ", line: " << t.line_number << ":" << t.col_number << std::endl;
+            std::cout << "tt: " << tptr->tt << ", str: " << tptr->token_string << ", line: " << tptr->line_number << ":" << tptr->col_number << std::endl;
+            tptr = tptr->next;
         }
     }
 
     void Assembler::tokenize()
     {
-        std::cout << "--------------------------\n";
-        std::cout << "Tokenizing\n";
-        std::cout << "--------------------------\n";
-        std::cout << _code;
-        Token t;
+        Token* t = new Token, *tnext;
         char c;
         bool is_comment = false;
         bool is_string = false;
@@ -53,8 +56,6 @@ namespace lib8085
         int token_col_number = 0;
 
         _symbol_table = std::unordered_map<std::string, lib8085::SymbolValue>();
-        _tokens = std::vector<Token>();
-
 
         for(size_t i = 0; i < _code.size(); i ++)
         {
@@ -68,16 +69,22 @@ namespace lib8085
                     is_comment = false;
                     line_number ++;
 
-                    t.line_number = line_number;
-                    t.col_number = token_col_number;
-                    _tokens.push_back(t);
+                    t->line_number = line_number;
+                    t->col_number = token_col_number;
 
-                    t.token_string = "";
+                    tnext = new Token;
+                    tnext->prev = t;
+                    tnext->next = nullptr;
+
+                    t->next = tnext;
+                    t = tnext;
+
+                    t->token_string = "";
                     token_col_number = col_number;
                 }
                 else
                 {
-                    t.token_string += c;
+                    t->token_string += c;
                 }
 
                 continue;
@@ -91,92 +98,104 @@ namespace lib8085
                 }
                 else
                 {
-                    t.token_string += c;
+                    t->token_string += c;
                 }
             }
             else if(c == ':')
             {
-                t.tt = TokenType::LABEL;
-                t.line_number = line_number;
-                t.col_number = token_col_number;
-                _tokens.push_back(t);
+                t->tt = TokenType::LABEL;
+                t->line_number = line_number;
+                t->col_number = token_col_number;
 
-                _symbol_table.insert({ t.token_string, SymbolValue() });
+                tnext = new Token;
+                tnext->prev = t;
+                tnext->next = nullptr;
 
-                t.token_string = "";
+                t->next = tnext;
+                t = tnext;
+
+                _symbol_table.insert({ t->token_string, SymbolValue() });
+
+                t->token_string = "";
                 token_col_number = col_number;
             }
             // else if(c == '+' || c == '-' || c == '*' || c == '%')
             // {
-            //     t.tt = TokenType::ARITHMETIC_OP;
-            //     t.line_number = line_number;
-            //     t.col_number = token_col_number;
+            //     t->tt = TokenType::ARITHMETIC_OP;
+            //     t->line_number = line_number;
+            //     t->col_number = token_col_number;
             //     _tokens.push_back(t);
 
-            //     t.token_string = "";
+            //     t->token_string = "";
             //     token_col_number = col_number;
             // }
             else if(c == ' ' || c == ',' || c == '\n' ||  c == '\t' || c == '\r' || c == ';')
             {
-                if(t.token_string.size() > 0)
+                if(t->token_string.size() > 0)
                 {
-                    const std::string token_string = t.token_string;
+                    const std::string token_string = t->token_string;
 
                     if(is_opcode(token_string))
                     {
-                        t.tt = TokenType::OPCODE;
+                        t->tt = TokenType::OPCODE;
                     }
                     else if(is_reg(token_string))
                     {
-                        t.tt = TokenType::REG;
-                        t.token_string[0] = std::toupper(token_string[0]);
+                        t->tt = TokenType::REG;
+                        t->token_string[0] = std::toupper(token_string[0]);
                     }
                     else if(is_directive(token_string))
                     {
-                        t.tt = TokenType::NAME;
+                        t->tt = TokenType::NAME;
                     }
                     else if(is_hex_operand(token_string))
                     {
-                        t.tt = TokenType::OPERAND_HEX;
+                        t->tt = TokenType::OPERAND_HEX;
                     }
                     else if(is_dec_operand(token_string))
                     {
-                        t.tt = TokenType::OPERAND_DEC;
+                        t->tt = TokenType::OPERAND_DEC;
                     }
                     else if(is_oct_operand(token_string))
                     {
-                        t.tt = TokenType::OPERAND_OCT;
+                        t->tt = TokenType::OPERAND_OCT;
                     }
                     else if(is_bin_operand(token_string))
                     {
-                        t.tt = TokenType::OPERAND_BIN;
+                        t->tt = TokenType::OPERAND_BIN;
                     }
                     else if(is_location_counter_operand(token_string))
                     {
-                        t.tt = TokenType::OPERAND_LOCATION_COUNTER;
+                        t->tt = TokenType::OPERAND_LOCATION_COUNTER;
                     }
                     else
                     {
-                        t.tt = TokenType::UNKNOWN;
+                        t->tt = TokenType::UNKNOWN;
                     }
 
-                    t.line_number = line_number;
-                    t.col_number = token_col_number;
-                    _tokens.push_back(t);
+                    t->line_number = line_number;
+                    t->col_number = token_col_number;
 
-                    t.token_string = "";
+                    tnext = new Token;
+                    tnext->prev = t;
+                    tnext->next = nullptr;
+
+                    t->next = tnext;
+                    t = tnext;
+
+                    t->token_string = "";
                     token_col_number = col_number;
                 }
             }
             else
             {
-                t.token_string += c;
+                t->token_string += c;
             }
 
             if(c == ';')
             {
                 is_comment = true;
-                t.tt = TokenType::COMMENT;
+                t->tt = TokenType::COMMENT;
                 token_col_number = col_number;
             }
             else if(c == '\'')
@@ -184,7 +203,7 @@ namespace lib8085
                 if(is_string)
                 {
                     is_string = false;
-                    t.tt = TokenType::OPERAND_ASCII_STR;
+                    t->tt = TokenType::OPERAND_ASCII_STR;
                     token_col_number = col_number;
                 }
                 else
@@ -201,12 +220,12 @@ namespace lib8085
             }
         }
 
-        t.line_number = line_number;
-        t.col_number = 0;
-        t.token_string = "_EOF";
-        t.tt = TokenType::_EOF;
+        t->line_number = line_number;
+        t->col_number = 0;
+        t->token_string = "_EOF";
+        t->tt = TokenType::_EOF;
 
-        _tokens.push_back(t);
+        t->next = nullptr;
     }
 
     bool Assembler::is_reg(const std::string& str) const
@@ -369,30 +388,6 @@ namespace lib8085
         return true;
     }
 
-
-    Token& Assembler::next_token()
-    {
-        Token& t = peek_token();
-        _current_token++;
-
-        while(t.tt == TokenType::COMMENT)
-        {
-            t = peek_token();
-            _current_token ++;
-        }
-        return t;
-    }
-
-    Token& Assembler::peek_token()
-    {
-        if(_current_token >= _tokens.size())
-        {
-            return _tokens[_tokens.size()];
-        }
-
-        return _tokens[_current_token+1];
-    }
-
     bool Assembler::parse_data_byte(const Token& t, uint8_t& operand_byte)
     {
         char c;
@@ -451,7 +446,7 @@ namespace lib8085
         {
             if(ts.size() > 5)
             {
-                std::cout << "Operand size\n";
+                std::cout << "Operand size too big\n";
                 return false;
             }
 
@@ -565,39 +560,39 @@ namespace lib8085
         std::unordered_map<std::string, lib8085::OpcodeData> instruction_db = 
             AssemblerUtil::get_instraction_str_data_map();
 
-        if(_tokens.size() == 0)
+        if(!m_tokens)
         {
             return false;
         }
 
-        Token t = _tokens[0];
+        Token* t = m_tokens;
         std::string tstring;
         std::string opcode_str;
-        Token src_token;
+        Token* src_token;
         Token dest_token;
         uint8_t operand_byte;
         uint16_t operand_word;
 
-        while(t.tt != TokenType::_EOF)
+        while(t)
         {
-            if(t.tt == TokenType::OPCODE)
+            if(t->tt == TokenType::OPCODE)
             {
-                tstring = t.token_string;
+                tstring = t->token_string;
 
-                Token next_token_obj = peek_token();
+                Token* next_token_obj = t->next;
 
-                if(is_reg(next_token_obj.token_string))
+                if(next_token_obj && is_reg(next_token_obj->token_string))
                 {
-                    std::cout << "Next token is a reg\n";
-                    opcode_str = tstring + "_" + next_token_obj.token_string;
+                    t = next_token_obj;
 
-                    next_token();
+                    opcode_str = tstring + "_" + next_token_obj->token_string;
 
-                    next_token_obj = peek_token();
-                    if(is_reg(next_token_obj.token_string))
+                    next_token_obj = next_token_obj->next;
+
+                    if(next_token_obj && is_reg(next_token_obj->token_string))
                     {
-                        opcode_str += "_" + next_token_obj.token_string;
-                        next_token();
+                        t = next_token_obj;
+                        opcode_str += "_" + next_token_obj->token_string;
                     }
                 }
                 else
@@ -610,8 +605,8 @@ namespace lib8085
 
                 if(it == instruction_db.end())
                 {
-                    std::cout << "Invalid instruction \'" << opcode_str << "\' at line "
-                        << t.line_number << ":" << t.col_number << "\n";
+                    std::cout << "Invalid instruction combination\'" << opcode_str << "\' at line "
+                        << t->line_number << ":" << t->col_number << "\n";
                     return false;
                 }
 
@@ -621,18 +616,25 @@ namespace lib8085
 
                 if(it->second.operand_count == 1)
                 {
-                    src_token = next_token();
+                    src_token = t->next;
+
+                    if(!src_token)
+                    {
+                        std::cout << "Expected operand at line "
+                            << t->line_number << ":" << t->col_number << "\n";
+                        return false;
+                    }
 
                     if(it->second.operand_size == 1)
                     {
-                        if(parse_data_byte(src_token, operand_byte))
+                        if(parse_data_byte(*src_token, operand_byte))
                         {
                             std::cout << "Operand value: " << (int)operand_byte << std::endl;;
                         }
                         else
                         {
-                            std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
-                                << src_token.line_number << ":" << src_token.col_number << "\n";
+                            std::cout << "Invalid operand \'" << src_token->token_string << "\' at line "
+                                << src_token->line_number << ":" << src_token->col_number << "\n";
                             return false;
                         }
 
@@ -641,14 +643,14 @@ namespace lib8085
                     }
                     else if(it->second.operand_size == 2)
                     {
-                        if(parse_data_word(src_token, operand_word))
+                        if(parse_data_word(*src_token, operand_word))
                         {
                             std::cout << "Operand value: " << (int)operand_word << std::endl;;
                         }
                         else
                         {
-                            std::cout << "Invalid operand \'" << src_token.token_string << "\' at line "
-                                << src_token.line_number << ":" << src_token.col_number << "\n";
+                            std::cout << "Invalid operand \'" << src_token->token_string << "\' at line "
+                                << src_token->line_number << ":" << src_token->col_number << "\n";
                             return false;
                         }
 
@@ -656,17 +658,15 @@ namespace lib8085
                         _program_instructions.push_back((operand_word & 0xff00) >> 8);
                     }
                 }
-                std::cout << "\n";
-
             }
-            else if(t.tt == TokenType::LABEL)
+            else if(t->tt == TokenType::LABEL)
             {
-                // std::cout << "Label: \"" << t.token_string << "\" = " << _program_instructions.size() << std::endl;
-                SymbolValue& sv = (_symbol_table[t.token_string]);
+                // std::cout << "Label: \"" << t->token_string << "\" = " << _program_instructions.size() << std::endl;
+                SymbolValue& sv = (_symbol_table[t->token_string]);
                 sv.value = (uint16_t)_program_instructions.size();
             }
 
-            t = next_token();
+            t = t->next; 
         }
 
         // Update label references

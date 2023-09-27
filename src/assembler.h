@@ -32,6 +32,9 @@ namespace lib8085
         
         std::string token_string;
         TokenType tt;
+
+        Token* next;
+        Token* prev;
     };
 
     struct SymbolValue
@@ -60,8 +63,7 @@ namespace lib8085
             std::vector<std::string> _opcode_strs;
             std::vector<std::string> _directive_strs;
 
-            std::vector<Token> _tokens;
-            size_t _current_token;
+            Token* m_tokens;
 
             std::unordered_map<std::string, SymbolValue> _symbol_table;
 
@@ -75,9 +77,5 @@ namespace lib8085
             bool is_location_counter_operand(const std::string& str) const;
             bool parse_data_byte(const Token& t, uint8_t& operand_byte);
             bool parse_data_word(const Token& t, uint16_t& operand_word);
-
-            // TODO: Migrate to linked list
-            Token& next_token();
-            Token& peek_token();
     };
 }
