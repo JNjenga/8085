@@ -1,4 +1,6 @@
-![Project logo](docs/img/readme_logo.png)
+<p align="center">
+  <img width="512" height="256" src="./docs/img/readme_logo.png">
+</p>
 
 Retro85
 ---
