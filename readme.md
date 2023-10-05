@@ -1,5 +1,6 @@
 <p align="center">
-  <img width="512" height="256" src="./docs/img/readme_logo.png">
+  <img src="./docs/img/readme_logo.png">
+  <hr>
 </p>
 
 Retro85
