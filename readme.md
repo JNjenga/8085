@@ -1,4 +1,4 @@
-![UI view](docs/img/screenshot1.png)
+![Project logo](docs/img/readme_logo.png)
 
 Retro85
 ---
@@ -13,6 +13,10 @@ While the development of this software is solely for recreational purposes, I be
 to own a  physical training kit.
 
 *While the core functionality is almost done, this software is still in development. Feel free to play around with it and give feedback.*
+
+---
+
+![UI view](docs/img/screenshot1.png)
 
 # Tech stack
 
