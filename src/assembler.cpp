@@ -38,12 +38,6 @@ namespace lib8085
         Token* t = m_tokens;
         Token* tmp_ptr;
 
-        // Start from head
-        while(t)
-        {
-            t = t->prev;
-        }
-
         while(t)
         {
             tmp_ptr = t->next;
@@ -65,6 +59,7 @@ namespace lib8085
     void Assembler::tokenize()
     {
         Token* t = new Token, *tnext;
+        m_tokens = t;
         char c;
         bool is_comment = false;
         bool is_string = false;
@@ -576,6 +571,7 @@ namespace lib8085
 
         if(!m_tokens)
         {
+            std::cout << "m_tokens is null\n";
             return false;
         }
 
@@ -590,6 +586,7 @@ namespace lib8085
         {
             if(t->tt == TokenType::OPCODE)
             {
+                std::cout << "line: " << t->line_number << ", str: " << t->token_string << "\n";
                 tstring = t->token_string;
 
                 Token* next_token_obj = t->next;
@@ -682,6 +679,7 @@ namespace lib8085
             t = t->next; 
         }
 
+        std::cout << "Updating label references\n";
         // Update label references
         for(auto& it: _symbol_table)
         {

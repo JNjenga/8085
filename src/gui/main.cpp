@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 #include "app.h"
+#include "res.h"
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
@@ -22,7 +23,7 @@ static std::string read_source_code(const char* path);
 static bool should_close = false;
 
 // App prooperties
-static appname8085::AppName appname;
+static retro85::App app;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -39,6 +40,7 @@ int main(int, char**)
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return 1;
+
 
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -64,9 +66,16 @@ int main(int, char**)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "8085 emulator", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Retro 85", nullptr, nullptr);
     if (window == nullptr)
         return 1;
+    
+    GLFWimage images[1];
+    images[0].width  = 48;
+    images[0].height = 48;
+    images[0].pixels = reinterpret_cast<unsigned char*>(&logo[0]);
+    glfwSetWindowIcon(window, 1, images);
+
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 
@@ -97,15 +106,10 @@ int main(int, char**)
     ImGuiTableFlags disassembley_flags = ImGuiTableFlags_Borders |  ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg;
     static bool close_mem_viewer= false;
     static char file_name[128] = "exampleasm/hello.asm";
-    lib8085::Processor* cpu = appname.get_cpu();
-
-    int reg_a = 0;
-    int reg_b = 0;
-    int reg_c = 0;
-    int reg_d = 0;
-    int reg_e = 0;
-    int reg_h = 0;
-    int reg_l = 0;
+    lib8085::Processor* cpu = app.get_cpu();
+    
+    const uint8_t u8_one = 1;
+    const uint16_t u16_one = 1;
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking;
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -115,17 +119,14 @@ int main(int, char**)
     float size_of_menu_bar;
     ImGuiID dockspace_id;
 
+    // bc, de, hl
+    uint8_t* pair_bc[2];
+    pair_bc[0] = &cpu->reg_b;
+    pair_bc[1] = &cpu->reg_c;
+
     // Main loop
     while (!glfwWindowShouldClose(window) && !should_close)
     {
-        reg_a = cpu->reg_a;
-        reg_b = cpu->reg_b;
-        reg_c = cpu->reg_c;
-        reg_d = cpu->reg_d;
-        reg_e = cpu->reg_e;
-        reg_h = cpu->reg_h;
-        reg_l = cpu->reg_l;
-
         x_offset = 0;
         y_offset = 0;
         glfwPollEvents();
@@ -159,20 +160,19 @@ int main(int, char**)
             ImGui::SetNextWindowSize(ImVec2(0, 40));
             ImGui::InputText("file path", file_name, IM_ARRAYSIZE(file_name));
 
-            ImGui::SameLine();
             if(ImGui::Button("Assemble"))
             {
                 // Read file
 
                 std::string code = read_source_code(file_name);
                 std::cout << code << std::endl;
-                appname.assemble(code);
+                app.assemble(code);
             }
 
             ImGui::SameLine();
             if(ImGui::Button("Reset"))
             {
-                appname.reset();
+                app.reset();
             }
 
             ImGui::SameLine();
@@ -181,7 +181,7 @@ int main(int, char**)
             ImGui::SameLine();
             if(ImGui::Button("Step"))
             {
-                appname.step();
+                app.step();
             }
 
             ImGui::SameLine();
@@ -209,56 +209,30 @@ int main(int, char**)
 
                 ImGui::SeparatorText("Registers");
 
-                if(ImGui::InputInt("A: ", &reg_a, 1))
-                {
-                    cpu->reg_a = static_cast<uint8_t>(reg_a);
-                }
+                static uint8_t pair_bc[2] = { cpu->reg_b, cpu->reg_c };
+                static uint8_t pair_de[2] = { cpu->reg_d, cpu->reg_e };
+                static uint8_t pair_hl[2] = { cpu->reg_l, cpu->reg_l };
 
-                if(ImGui::InputInt("B: ", &reg_b, 1))
-                {
-                    cpu->reg_b = static_cast<uint8_t>(reg_b);
-                }
+                ImGui::InputScalar("A", ImGuiDataType_U8, &cpu->reg_a, &u8_one);
+                ImGui::InputScalarN("BC", ImGuiDataType_U8, pair_bc, 2, &u8_one);
+                ImGui::InputScalarN("DE", ImGuiDataType_U8, pair_de, 2, &u8_one);
+                ImGui::InputScalarN("HL", ImGuiDataType_U8, pair_hl, 2, &u8_one);
 
-                if(ImGui::InputInt("C: ", &reg_c, 1))
-                {
-                    cpu->reg_c = static_cast<uint8_t>(reg_c);
-                }
-
-                if(ImGui::InputInt("D: ", &reg_d, 1))
-                {
-                    cpu->reg_d = static_cast<uint8_t>(reg_d);
-                }
-
-                if(ImGui::InputInt("E: ", &reg_e, 1))
-                {
-                    cpu->reg_e = static_cast<uint8_t>(reg_e);
-                }
-
-                if(ImGui::InputInt("H: ", &reg_h, 1))
-                {
-                    cpu->reg_h = static_cast<uint8_t>(reg_h);
-                }
-
-                if(ImGui::InputInt("L: ", &reg_l, 1))
-                {
-                    cpu->reg_l = static_cast<uint8_t>(reg_l);
-                }
-
-                ImGui::InputInt("PSW: ", (int*)&cpu->reg_c, 1);
-                ImGui::InputInt("PC: ",  (int*)&cpu->program_counter, 1);
-                ImGui::InputInt("SP: ",  (int*)&cpu->stack_pointer, 1);
+                // ImGui::InputScalar("PSW", ImGuiDataType_U16, &cpu->reg_a, &u16_one);
+                ImGui::InputScalar("PC", ImGuiDataType_U16, &cpu->program_counter, &u16_one);
+                ImGui::InputScalar("SP", ImGuiDataType_U16, &cpu->stack_pointer, &u16_one);
 
                 ImGui::SeparatorText("");
                 // Status register
-                ImGui::Checkbox("Sign     ", &cpu->sign);
+                ImGui::Checkbox("S", &cpu->sign);
                 ImGui::SameLine();
-                ImGui::Checkbox("Zero     ", &cpu->zero);
+                ImGui::Checkbox("Z", &cpu->zero);
                 ImGui::SameLine();
-                ImGui::Checkbox("Aux Carry", &cpu->auxiliary_carry);
-
-                ImGui::Checkbox("Parity   ", &cpu->parity);
+                ImGui::Checkbox("Ax", &cpu->auxiliary_carry);
                 ImGui::SameLine();
-                ImGui::Checkbox("Carry    ", &cpu->carry);
+                ImGui::Checkbox("P", &cpu->parity);
+                ImGui::SameLine();
+                ImGui::Checkbox("C", &cpu->carry);
 
 
 
@@ -278,7 +252,7 @@ int main(int, char**)
 
                     uint64_t address;
 
-                    std::map<uint64_t, std::string> disassembly = appname.get_disassembly();
+                    std::map<uint64_t, std::string> disassembly = app.get_disassembly();
 
                     auto loc = disassembly.find(cpu->program_counter);
 
@@ -382,6 +356,11 @@ int main(int, char**)
                     }
                     ImGui::EndTable();
                 }
+                ImGui::End();
+            }
+            if(ImGui::Begin("Logs", &close_disassembley, ImGuiWindowFlags_NoCollapse))
+            {
+                // Logs
                 ImGui::End();
             }
 

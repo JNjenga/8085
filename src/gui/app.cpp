@@ -1,8 +1,9 @@
 #include "app.h"
 #include <algorithm>
 
-bool appname8085::AppName::assemble(std::string& code)
+bool retro85::App::assemble(std::string& code)
 {
+    std::cout << "Code: " << code << "\n";
     lib8085::Assembler assembler{code};
 
     assembler.assemble();
@@ -14,39 +15,40 @@ bool appname8085::AppName::assemble(std::string& code)
     return true;
 }
 
-bool appname8085::AppName::step()
+bool retro85::App::step()
 {
     _cpu.exec(1);
     return true;
 }
 
-bool appname8085::AppName::reset()
+bool retro85::App::reset()
 {
+    _assembler._disassembly.clear();
     _cpu.reset();
     return true;
 }
 
-bool appname8085::AppName::pause()
+bool retro85::App::pause()
 {
     return true;
 }
 
-const std::map<uint64_t, std::string>& appname8085::AppName::get_disassembly()
+const std::map<uint64_t, std::string>& retro85::App::get_disassembly()
 {
     return _assembler._disassembly;
 }
 
-lib8085::Processor* appname8085::AppName::get_cpu()
+lib8085::Processor* retro85::App::get_cpu()
 {
     return &_cpu;
 }
 
-appname8085::AppName::AppName() : _assembler(lib8085::Assembler(std::string("")))
+retro85::App::App() : _assembler(lib8085::Assembler(std::string("")))
 {
 
 }
 
-appname8085::AppName::~AppName()
+retro85::App::~App()
 {
 
 }

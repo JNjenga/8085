@@ -1,12 +1,12 @@
 #include "../lib8085.h"
 #include "../assembler.h"
 
-namespace appname8085
+namespace retro85
 {
-    class AppName
+    class App
     {
         public:
-            AppName();
+            App();
 
             bool assemble(std::string& code);
             bool step();
@@ -16,7 +16,7 @@ namespace appname8085
             const std::map<uint64_t, std::string>& get_disassembly();
             lib8085::Processor* get_cpu();
 
-            ~AppName();
+            ~App();
         private:
             lib8085::Assembler _assembler;
             lib8085::Processor _cpu;

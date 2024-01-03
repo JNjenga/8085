@@ -907,6 +907,16 @@ namespace lib8085
                     reg_a = reg_b;
                 }
                 break;
+            case MOV_C_A:
+                {
+                    reg_c = reg_a;
+                }
+                break;
+            case MOV_C_B:
+                {
+                    reg_c = reg_b;
+                }
+                break;
             case MOV_A_M:
                 {
                     uint16_t address = get_word(reg_h, reg_l);

@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="./docs/img/readme_logo.png">
-  <hr>
-</p>
 
 Retro85
 ---
@@ -15,7 +11,7 @@ From the instruction set, to cpu cycles to io devices.
 While the development of this software is solely for recreational purposes, I believe it can be used as a teaching tool for those who are not fortunate enough
 to own a  physical training kit.
 
-*While the core functionality is almost done, this software is still in development. Feel free to play around with it and give feedback.*
+*This app is still in development. In the meantime feel free to play around with it and give feedback.*
 
 ---
 
